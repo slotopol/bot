@@ -3,6 +3,17 @@ local http = require("http") -- see: https://github.com/cjoudrey/gluahttp
 local json = require("json") -- see: https://github.com/layeh/gopher-json
 local crypto = require('crypto') -- see: https://github.com/tengattack/gluacrypto
 
+local function lshift(a, b)
+	for _ = 1, b do
+		a = a*2
+	end
+	return a
+end
+
+function makebitnum(num)
+	return lshift(lshift(1, num) - 1, 1)
+end
+
 function servinfo(addr)
 	local res, err = http.get(addr.."/servinfo")
 	if err ~= nil then
@@ -267,4 +278,77 @@ function gamespin(addr, token, gid)
 		error(t.what)
 	end
 	return json.decode(res.body)
+end
+
+function gamedoubleup(addr, token, gid, mult)
+	local res, err = http.post(addr.."/game/doubleup", {
+		headers={
+			["Content-Type"]="application/json",
+			["Authorization"] = "Bearer "..token,
+		},
+		body=json.encode({gid=gid, mult=mult or 2})
+	})
+	if err ~= nil then
+		error(err)
+	end
+	if res.status_code ~= 200 then
+		local t = json.decode(res.body)
+		error(t.what)
+	end
+	return json.decode(res.body)
+end
+
+function gamecollect(addr, token, gid)
+	local res, err = http.post(addr.."/game/collect", {
+		headers={
+			["Content-Type"]="application/json",
+			["Authorization"] = "Bearer "..token,
+		},
+		body=json.encode({gid=gid})
+	})
+	if err ~= nil then
+		error(err)
+	end
+	if res.status_code ~= 200 then
+		local t = json.decode(res.body)
+		error(t.what)
+	end
+end
+
+function propwalletget(addr, token, cid, uid)
+	local res, err = http.post(addr.."/prop/wallet/get", {
+		headers={
+			["Content-Type"]="application/json",
+			["Authorization"] = "Bearer "..token,
+		},
+		body=json.encode({cid=cid, uid=uid})
+	})
+	if err ~= nil then
+		error(err)
+	end
+	if res.status_code ~= 200 then
+		local t = json.decode(res.body)
+		error(t.what)
+	end
+	local t = json.decode(res.body)
+	return t.wallet
+end
+
+function propwalletadd(addr, token, cid, uid, sum)
+	local res, err = http.post(addr.."/prop/wallet/add", {
+		headers={
+			["Content-Type"]="application/json",
+			["Authorization"] = "Bearer "..token,
+		},
+		body=json.encode({cid=cid, uid=uid, sum=sum})
+	})
+	if err ~= nil then
+		error(err)
+	end
+	if res.status_code ~= 200 then
+		local t = json.decode(res.body)
+		error(t.what)
+	end
+	local t = json.decode(res.body)
+	return t.wallet
 end

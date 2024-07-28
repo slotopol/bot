@@ -19,11 +19,11 @@ import (
 
 var (
 	// compiled binary version, sets by compiler with command
-	//    go build -ldflags="-X 'github.com/slotopol/bot.BuildVers=%buildvers%'"
+	//    go build -ldflags="-X 'main.BuildVers=%buildvers%'"
 	BuildVers string
 
 	// compiled binary build date, sets by compiler with command
-	//    go build -ldflags="-X 'github.com/slotopol/bot.BuildTime=%buildtime%'"
+	//    go build -ldflags="-X 'main.BuildTime=%buildtime%'"
 	BuildTime string
 )
 
@@ -104,6 +104,31 @@ func luatime2milli(ls *lua.LState) int {
 	return 1
 }
 
+func luasleep(ls *lua.LState) int {
+	var err error
+	defer func() {
+		if err != nil {
+			ls.RaiseError(err.Error())
+		}
+	}()
+	var arg = ls.CheckAny(1)
+
+	var d time.Duration
+	switch v := arg.(type) {
+	case lua.LNumber:
+		d = time.Duration(v) * time.Millisecond
+	case lua.LString:
+		if d, err = time.ParseDuration(string(v)); err != nil {
+			return 0
+		}
+	default:
+		ls.RaiseError("expected number as duration in milliseconds or string with formatted duration")
+	}
+	time.Sleep(d)
+
+	return 0
+}
+
 // RunLuaVM runs specified Lua-script with Lua Bot API.
 func RunLuaVM(fpath string) (err error) {
 	var ls = lua.NewState()
@@ -114,7 +139,13 @@ func RunLuaVM(fpath string) (err error) {
 	ls.PreloadModule("json", json.Loader)
 	ls.PreloadModule("crypto", crypto.Loader)
 
-	var bindir = path.Dir(util.ToSlash(os.Args[0]))
+	var bindir = func() string {
+		if str, err := os.Executable(); err == nil {
+			return path.Dir(util.ToSlash(str))
+		} else {
+			return path.Dir(util.ToSlash(os.Args[0]))
+		}
+	}()
 	var scrdir = path.Dir(util.ToSlash(fpath))
 
 	// global variables
@@ -130,6 +161,7 @@ func RunLuaVM(fpath string) (err error) {
 	ls.SetGlobal("hex2bin", ls.NewFunction(luahex2bin))
 	ls.SetGlobal("milli2time", ls.NewFunction(luamilli2time))
 	ls.SetGlobal("time2milli", ls.NewFunction(luatime2milli))
+	ls.SetGlobal("sleep", ls.NewFunction(luasleep))
 
 	if err = ls.DoFile(fpath); err != nil {
 		return
