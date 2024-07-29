@@ -7,7 +7,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"path"
+	"syscall"
 	"time"
 
 	"github.com/cjoudrey/gluahttp"
@@ -26,6 +28,8 @@ var (
 	//    go build -ldflags="-X 'main.BuildTime=%buildtime%'"
 	BuildTime string
 )
+
+var quit = make(chan lua.LValue)
 
 func lualog(ls *lua.LState) int {
 	var s = ls.CheckString(1)
@@ -129,10 +133,33 @@ func luasleep(ls *lua.LState) int {
 	return 0
 }
 
+func WaitQuit() {
+	var sigint = make(chan os.Signal, 1)
+	var sigterm = make(chan os.Signal, 1)
+	// We'll accept graceful shutdowns when quit via SIGINT (Ctrl+C) or SIGTERM (Ctrl+/)
+	// SIGKILL, SIGQUIT will not be caught.
+	signal.Notify(sigint, syscall.SIGINT)
+	signal.Notify(sigterm, syscall.SIGTERM)
+	// Block until we receive our signal.
+	var ok = true
+	select {
+	case _, ok = <-quit:
+	case <-sigint:
+	case <-sigterm:
+	}
+	if ok {
+		close(quit)
+	}
+	signal.Stop(sigint)
+	signal.Stop(sigterm)
+}
+
 // RunLuaVM runs specified Lua-script with Lua Bot API.
 func RunLuaVM(fpath string) (err error) {
 	var ls = lua.NewState()
 	defer ls.Close()
+
+	ls.SetGlobal("quit", lua.LChannel(quit))
 
 	ls.PreloadModule("path", LoadPath)
 	ls.PreloadModule("http", gluahttp.NewHttpModule(&http.Client{}).Loader)

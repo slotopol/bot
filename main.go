@@ -9,6 +9,7 @@ import (
 )
 
 func main() {
+	go WaitQuit()
 	for _, fpath := range os.Args[1:] {
 		if util.ToLower(filepath.Ext(fpath)) == ".lua" {
 			if err := RunLuaVM(util.Envfmt(fpath, nil)); err != nil {
