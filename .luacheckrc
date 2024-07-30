@@ -5,8 +5,8 @@
 
 globals = {
 	-- variables
-	"quit",
-	"addr", "cid", "email", "secret", "name", "jobtime", "speed",
+	"admin",
+	"lt", "addr", "cid", "email", "secret", "name", "jobtime", "speed",
 	-- functions
 	"makebitnum",
 	"servinfo", "memusage", "gamelist",
@@ -19,9 +19,11 @@ globals = {
 
 read_globals = {
 	-- variables
+	"quit",
 	"buildvers", "buildtime", "bindir", "scrdir", "tmpdir",
 	-- functions
-	"log", "checkfile", "bin2hex", "hex2bin", "milli2time", "time2milli", "sleep",
+	"log", "checkfile", "bin2hex", "hex2bin", "milli2time", "time2milli",
+	"sleep", "thread",
 }
 
 std = { -- Lua 5.1 & GopherLua

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/hex"
 	"errors"
 	"io/fs"
@@ -12,11 +13,15 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/slotopol/bot/util"
+
+	lua "github.com/yuin/gopher-lua"
+	"github.com/yuin/gopher-lua/ast"
+	"github.com/yuin/gopher-lua/parse"
+
 	"github.com/cjoudrey/gluahttp"
 	json "github.com/layeh/gopher-json"
-	"github.com/slotopol/bot/util"
 	crypto "github.com/tengattack/gluacrypto/crypto"
-	lua "github.com/yuin/gopher-lua"
 )
 
 var (
@@ -133,6 +138,86 @@ func luasleep(ls *lua.LState) int {
 	return 0
 }
 
+var protocache = map[string]*lua.FunctionProto{}
+
+func luathread(ls *lua.LState) int {
+	var err error
+	var exit chan lua.LValue
+	var body []*lua.FunctionProto
+	var args = map[string]lua.LValue{}
+	var n = ls.GetTop()
+	for i := 1; i <= n; i++ {
+		var arg = ls.Get(i)
+		switch v := arg.(type) {
+		case *lua.LTable:
+			v.ForEach(func(key lua.LValue, val lua.LValue) {
+				if _, ok := key.(lua.LString); ok {
+					args[key.String()] = val
+				}
+			})
+		case lua.LChannel:
+			exit = v
+		case lua.LString:
+			var fpath = v.String()
+			var proto *lua.FunctionProto
+			var ok bool
+			if proto, ok = protocache[fpath]; !ok { // check cache
+				if func() {
+					var file, err = os.Open(fpath)
+					defer file.Close()
+					if err != nil {
+						return
+					}
+					var reader = bufio.NewReader(file)
+					var chunk []ast.Stmt
+					if chunk, err = parse.Parse(reader, fpath); err != nil {
+						return
+					}
+					if proto, err = lua.Compile(chunk, fpath); err != nil {
+						return
+					}
+					protocache[fpath] = proto // put to cache
+				}(); err != nil {
+					ls.RaiseError(err.Error())
+					return 0
+				}
+			}
+			body = append(body, proto)
+		default:
+			ls.RaiseError("expected functions or exit channel, got %s", v.Type())
+			return 0
+		}
+	}
+
+	var tls = MakeLuaVM() // thread Lua state
+	go func() {
+		defer tls.Close()
+
+		for key, val := range args {
+			tls.SetGlobal(key, val)
+		}
+
+		var count int
+		for _, proto := range body {
+			var lfunc = tls.NewFunctionFromProto(proto)
+			tls.Push(lfunc)
+			if err = tls.PCall(0, lua.MultRet, nil); err != nil {
+				break
+			}
+			count++
+		}
+
+		if exit != nil {
+			if err != nil {
+				exit <- lua.LString(err.Error())
+			} else {
+				exit <- lua.LNil
+			}
+		}
+	}()
+	return 0
+}
+
 func WaitQuit() {
 	var sigint = make(chan os.Signal, 1)
 	var sigterm = make(chan os.Signal, 1)
@@ -154,13 +239,11 @@ func WaitQuit() {
 	signal.Stop(sigterm)
 }
 
-// RunLuaVM runs specified Lua-script with Lua Bot API.
-func RunLuaVM(fpath string) (err error) {
+// MakeLuaVM creates Lua state and performs initial registrations.
+func MakeLuaVM() *lua.LState {
 	var ls = lua.NewState()
-	defer ls.Close()
 
-	ls.SetGlobal("quit", lua.LChannel(quit))
-
+	// preload modules
 	ls.PreloadModule("path", LoadPath)
 	ls.PreloadModule("http", gluahttp.NewHttpModule(&http.Client{}).Loader)
 	ls.PreloadModule("json", json.Loader)
@@ -173,13 +256,12 @@ func RunLuaVM(fpath string) (err error) {
 			return path.Dir(util.ToSlash(os.Args[0]))
 		}
 	}()
-	var scrdir = path.Dir(util.ToSlash(fpath))
 
 	// global variables
+	ls.SetGlobal("quit", lua.LChannel(quit))
 	ls.SetGlobal("buildvers", lua.LString(BuildVers))
 	ls.SetGlobal("buildtime", lua.LString(BuildTime))
 	ls.SetGlobal("bindir", lua.LString(bindir))
-	ls.SetGlobal("scrdir", lua.LString(scrdir))
 	ls.SetGlobal("tmpdir", lua.LString(util.ToSlash(os.TempDir())))
 	// global functions
 	ls.SetGlobal("log", ls.NewFunction(lualog))
@@ -189,6 +271,18 @@ func RunLuaVM(fpath string) (err error) {
 	ls.SetGlobal("milli2time", ls.NewFunction(luamilli2time))
 	ls.SetGlobal("time2milli", ls.NewFunction(luatime2milli))
 	ls.SetGlobal("sleep", ls.NewFunction(luasleep))
+	ls.SetGlobal("thread", ls.NewFunction(luathread))
+
+	return ls
+}
+
+// RunLuaVM runs specified Lua-script with Lua Bot API.
+func RunLuaVM(fpath string) (err error) {
+	var ls = MakeLuaVM()
+	defer ls.Close()
+
+	var scrdir = path.Dir(util.ToSlash(fpath))
+	ls.SetGlobal("scrdir", lua.LString(scrdir))
 
 	if err = ls.DoFile(fpath); err != nil {
 		return

@@ -3,6 +3,16 @@ local http = require("http") -- see: https://github.com/cjoudrey/gluahttp
 local json = require("json") -- see: https://github.com/layeh/gopher-json
 local crypto = require('crypto') -- see: https://github.com/tengattack/gluacrypto
 
+local function checkres(res, err)
+	if err ~= nil then
+		error(err)
+	end
+	if res.status_code ~= 200 then
+		local t = json.decode(res.body)
+		error(string.format("status: %d, code: %d, message: %s", res.status_code, t.code, t.what))
+	end
+end
+
 local function lshift(a, b)
 	for _ = 1, b do
 		a = a*2
@@ -40,13 +50,7 @@ end
 
 function signis(addr, email)
 	local res, err = http.get(addr.."/signis", {query="email="..email})
-	if err ~= nil then
-		error(err)
-	end
-	if res.status_code ~= 200 then
-		local t = json.decode(res.body)
-		error(t.what)
-	end
+	checkres(res, err)
 	local t = json.decode(res.body)
 	return t.uid
 end
@@ -56,13 +60,7 @@ function signup(addr, email, secret, name)
 		headers={["Content-Type"]="application/json"},
 		body=json.encode({email=email, secret=secret, name=name}),
 	})
-	if err ~= nil then
-		error(err)
-	end
-	if res.status_code ~= 200 then
-		local t = json.decode(res.body)
-		error(t.what)
-	end
+	checkres(res, err)
 	local t = json.decode(res.body)
 	return t.uid
 end
@@ -74,13 +72,7 @@ function signin(addr, email, secret)
 		headers={["Content-Type"]="application/json"},
 		body=json.encode({email=email, hs256=hs256, sigtime=sigtime})
 	})
-	if err ~= nil then
-		error(err)
-	end
-	if res.status_code ~= 200 then
-		local t = json.decode(res.body)
-		error(t.what)
-	end
+	checkres(res, err)
 	return json.decode(res.body)
 end
 
@@ -91,13 +83,7 @@ function refresh(addr, token)
 			["Authorization"] = "Bearer "..token,
 		},
 	})
-	if err ~= nil then
-		error(err)
-	end
-	if res.status_code ~= 200 then
-		local t = json.decode(res.body)
-		error(t.what)
-	end
+	checkres(res, err)
 	return json.decode(res.body)
 end
 
@@ -109,13 +95,7 @@ function gamejoin(addr, token, cid, uid, alias)
 		},
 		body=json.encode({cid=cid, uid=uid, alias=alias})
 	})
-	if err ~= nil then
-		error(err)
-	end
-	if res.status_code ~= 200 then
-		local t = json.decode(res.body)
-		error(t.what)
-	end
+	checkres(res, err)
 	return json.decode(res.body)
 end
 
@@ -127,13 +107,7 @@ function gamepart(addr, token, gid)
 		},
 		body=json.encode({gid=gid})
 	})
-	if err ~= nil then
-		error(err)
-	end
-	if res.status_code ~= 200 then
-		local t = json.decode(res.body)
-		error(t.what)
-	end
+	checkres(res, err)
 end
 
 function gamestate(addr, token, gid)
@@ -144,13 +118,7 @@ function gamestate(addr, token, gid)
 		},
 		body=json.encode({gid=gid})
 	})
-	if err ~= nil then
-		error(err)
-	end
-	if res.status_code ~= 200 then
-		local t = json.decode(res.body)
-		error(t.what)
-	end
+	checkres(res, err)
 	return json.decode(res.body)
 end
 
@@ -162,13 +130,7 @@ function gamebetget(addr, token, gid)
 		},
 		body=json.encode({gid=gid})
 	})
-	if err ~= nil then
-		error(err)
-	end
-	if res.status_code ~= 200 then
-		local t = json.decode(res.body)
-		error(t.what)
-	end
+	checkres(res, err)
 	local t = json.decode(res.body)
 	return t.bet
 end
@@ -181,13 +143,7 @@ function gamebetset(addr, token, gid, bet)
 		},
 		body=json.encode({gid=gid, bet=bet})
 	})
-	if err ~= nil then
-		error(err)
-	end
-	if res.status_code ~= 200 then
-		local t = json.decode(res.body)
-		error(t.what)
-	end
+	checkres(res, err)
 end
 
 function gamesblget(addr, token, gid)
@@ -198,13 +154,7 @@ function gamesblget(addr, token, gid)
 		},
 		body=json.encode({gid=gid})
 	})
-	if err ~= nil then
-		error(err)
-	end
-	if res.status_code ~= 200 then
-		local t = json.decode(res.body)
-		error(t.what)
-	end
+	checkres(res, err)
 	local t = json.decode(res.body)
 	return t.sbl
 end
@@ -217,13 +167,7 @@ function gamesblset(addr, token, gid, sbl)
 		},
 		body=json.encode({gid=gid, sbl=sbl})
 	})
-	if err ~= nil then
-		error(err)
-	end
-	if res.status_code ~= 200 then
-		local t = json.decode(res.body)
-		error(t.what)
-	end
+	checkres(res, err)
 end
 
 function gamereelsget(addr, token, gid)
@@ -234,13 +178,7 @@ function gamereelsget(addr, token, gid)
 		},
 		body=json.encode({gid=gid})
 	})
-	if err ~= nil then
-		error(err)
-	end
-	if res.status_code ~= 200 then
-		local t = json.decode(res.body)
-		error(t.what)
-	end
+	checkres(res, err)
 	local t = json.decode(res.body)
 	return t.rd
 end
@@ -253,13 +191,7 @@ function gamereelsset(addr, token, gid, rd)
 		},
 		body=json.encode({gid=gid, rd=rd})
 	})
-	if err ~= nil then
-		error(err)
-	end
-	if res.status_code ~= 200 then
-		local t = json.decode(res.body)
-		error(t.what)
-	end
+	checkres(res, err)
 end
 
 function gamespin(addr, token, gid)
@@ -270,13 +202,7 @@ function gamespin(addr, token, gid)
 		},
 		body=json.encode({gid=gid})
 	})
-	if err ~= nil then
-		error(err)
-	end
-	if res.status_code ~= 200 then
-		local t = json.decode(res.body)
-		error(t.what)
-	end
+	checkres(res, err)
 	return json.decode(res.body)
 end
 
@@ -288,13 +214,7 @@ function gamedoubleup(addr, token, gid, mult)
 		},
 		body=json.encode({gid=gid, mult=mult or 2})
 	})
-	if err ~= nil then
-		error(err)
-	end
-	if res.status_code ~= 200 then
-		local t = json.decode(res.body)
-		error(t.what)
-	end
+	checkres(res, err)
 	return json.decode(res.body)
 end
 
@@ -306,13 +226,7 @@ function gamecollect(addr, token, gid)
 		},
 		body=json.encode({gid=gid})
 	})
-	if err ~= nil then
-		error(err)
-	end
-	if res.status_code ~= 200 then
-		local t = json.decode(res.body)
-		error(t.what)
-	end
+	checkres(res, err)
 end
 
 function propwalletget(addr, token, cid, uid)
@@ -323,13 +237,7 @@ function propwalletget(addr, token, cid, uid)
 		},
 		body=json.encode({cid=cid, uid=uid})
 	})
-	if err ~= nil then
-		error(err)
-	end
-	if res.status_code ~= 200 then
-		local t = json.decode(res.body)
-		error(t.what)
-	end
+	checkres(res, err)
 	local t = json.decode(res.body)
 	return t.wallet
 end
@@ -342,13 +250,7 @@ function propwalletadd(addr, token, cid, uid, sum)
 		},
 		body=json.encode({cid=cid, uid=uid, sum=sum})
 	})
-	if err ~= nil then
-		error(err)
-	end
-	if res.status_code ~= 200 then
-		local t = json.decode(res.body)
-		error(t.what)
-	end
+	checkres(res, err)
 	local t = json.decode(res.body)
 	return t.wallet
 end
