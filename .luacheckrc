@@ -5,13 +5,13 @@
 
 globals = {
 	-- variables
-	"admin",
-	"lt", "addr", "cid", "email", "secret", "name", "jobtime", "speed",
+	"signctx", "admtoken",
+	"lt", "addr", "cid", "email", "secret", "name", "jobtime", "speed", "gameset",
 	-- functions
-	"makebitnum",
+	"getbitnum", "makebitnum",
 	"servinfo", "memusage", "gamelist",
 	"signis", "signup", "signin", "refresh",
-	"gamejoin", "gamepart", "gamestate",
+	"gamejoin", "gamepart", "gameinfo",
 	"gamebetget", "gamebetset", "gamesblget", "gamesblset", "gamereelsget", "gamereelsset",
 	"gamespin", "gamedoubleup", "gamecollect",
 	"propwalletget", "propwalletadd",

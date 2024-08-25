@@ -1,0 +1,111 @@
+
+local games = {
+	{ -- 1
+		gid = 0,
+		alias = "dolphinspearl",
+		changesbl = true,
+		bet = 1, sln = 5,
+		fs = 0, gain = 0,
+	},
+	{ -- 2
+		gid = 0,
+		alias = "columbus",
+		changesbl = true,
+		bet = 1, sln = 9,
+		fs = 0, gain = 0,
+	},
+	{ -- 3
+		gid = 0,
+		alias = "bananasgobahamas",
+		changesbl = true,
+		bet = 5, sln = 5,
+		fs = 0, gain = 0,
+	},
+	{ -- 4
+		gid = 0,
+		alias = "sizzlinghot",
+		changesbl = false,
+		bet = 1, sln = 0,
+		fs = 0, gain = 0,
+	},
+	{ -- 5
+		gid = 0,
+		alias = "slotopol",
+		changesbl = true,
+		bet = 0.2, sln = 21,
+		fs = 0, gain = 0,
+	},
+	{ -- 6
+		gid = 0,
+		alias = "slotopoldeluxe",
+		changesbl = false,
+		bet = 0.5, sln = 9,
+		fs = 0, gain = 0,
+	},
+	{ -- 7
+		gid = 0,
+		alias = "plentyontwenty",
+		changesbl = true,
+		bet = 1, sln = 0,
+		fs = 0, gain = 0,
+	},
+	{ -- 8
+		gid = 0,
+		alias = "ultrahot",
+		changesbl = false,
+		bet = 5, sln = 0,
+		fs = 0, gain = 0,
+	},
+	{ -- 9
+		gid = 0,
+		alias = "katana",
+		changesbl = true,
+		bet = 1, sln = 0,
+		fs = 0, gain = 0,
+	},
+	{ -- 10
+		gid = 0,
+		alias = "2millionbc",
+		changesbl = true,
+		bet = 1, sln = 10,
+		fs = 0, gain = 0,
+	},
+	{ -- 11
+		gid = 0,
+		alias = "firejoker",
+		changesbl = false,
+		bet = 2, sln = 0,
+		fs = 0, gain = 0,
+	},
+	{ -- 12
+		gid = 0,
+		alias = "kingofcards",
+		changesbl = true,
+		bet = 1, sln = 5,
+		fs = 0, gain = 0,
+	},
+	{ -- 13
+		gid = 0,
+		alias = "attila",
+		changesbl = true,
+		bet = 10, sln = 3,
+		fs = 0, gain = 0,
+	},
+	{ -- 14
+		gid = 0,
+		alias = "dolphinspearldeluxe",
+		changesbl = true,
+		bet = 1, sln = 10,
+		fs = 0, gain = 0,
+	},
+	{ -- 15
+		gid = 0,
+		alias = "fortuneteller",
+		changesbl = true,
+		bet = 1, sln = 0,
+		fs = 0, gain = 0,
+	},
+}
+local gamenum = {1, 1, 1, 1, 1, 2, 2, 3, 4, 5, 10, 15}
+
+return games, gamenum

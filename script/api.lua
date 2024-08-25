@@ -3,21 +3,22 @@ local http = require("http") -- see: https://github.com/cjoudrey/gluahttp
 local json = require("json") -- see: https://github.com/layeh/gopher-json
 local crypto = require('crypto') -- see: https://github.com/tengattack/gluacrypto
 
-local function checkres(res, err)
-	if err ~= nil then
-		error(err)
-	end
-	if res.status_code ~= 200 then
-		local t = json.decode(res.body)
-		error(string.format("status: %d, code: %d, message: %s", res.status_code, t.code, t.what))
-	end
-end
-
 local function lshift(a, b)
 	for _ = 1, b do
 		a = a*2
 	end
 	return a
+end
+
+function getbitnum(v)
+	local b, n = 1, 0
+	repeat
+	  if v % (b*2) > 0 then
+		v, n = v-b, n+1
+	  end
+	  b = b * 2
+	until b > v
+	return n
 end
 
 function makebitnum(num)
@@ -29,7 +30,7 @@ function servinfo(addr)
 	if err ~= nil then
 		error(err)
 	end
-	return json.decode(res.body)
+	return json.decode(res.body), res.status_code
 end
 
 function memusage(addr)
@@ -37,7 +38,7 @@ function memusage(addr)
 	if err ~= nil then
 		error(err)
 	end
-	return json.decode(res.body)
+	return json.decode(res.body), res.status_code
 end
 
 function gamelist(addr)
@@ -45,14 +46,16 @@ function gamelist(addr)
 	if err ~= nil then
 		error(err)
 	end
-	return json.decode(res.body)
+	return json.decode(res.body), res.status_code
 end
 
 function signis(addr, email)
 	local res, err = http.get(addr.."/signis", {query="email="..email})
-	checkres(res, err)
+	if err ~= nil then
+		error(err)
+	end
 	local t = json.decode(res.body)
-	return t.uid
+	return t.uid, res.status_code
 end
 
 function signup(addr, email, secret, name)
@@ -60,9 +63,11 @@ function signup(addr, email, secret, name)
 		headers={["Content-Type"]="application/json"},
 		body=json.encode({email=email, secret=secret, name=name}),
 	})
-	checkres(res, err)
+	if err ~= nil then
+		error(err)
+	end
 	local t = json.decode(res.body)
-	return t.uid
+	return t.uid, res.status_code
 end
 
 function signin(addr, email, secret)
@@ -72,8 +77,10 @@ function signin(addr, email, secret)
 		headers={["Content-Type"]="application/json"},
 		body=json.encode({email=email, hs256=hs256, sigtime=sigtime})
 	})
-	checkres(res, err)
-	return json.decode(res.body)
+	if err ~= nil then
+		error(err)
+	end
+	return json.decode(res.body), res.status_code
 end
 
 function refresh(addr, token)
@@ -83,8 +90,10 @@ function refresh(addr, token)
 			["Authorization"] = "Bearer "..token,
 		},
 	})
-	checkres(res, err)
-	return json.decode(res.body)
+	if err ~= nil then
+		error(err)
+	end
+	return json.decode(res.body), res.status_code
 end
 
 function gamejoin(addr, token, cid, uid, alias)
@@ -95,8 +104,10 @@ function gamejoin(addr, token, cid, uid, alias)
 		},
 		body=json.encode({cid=cid, uid=uid, alias=alias})
 	})
-	checkres(res, err)
-	return json.decode(res.body)
+	if err ~= nil then
+		error(err)
+	end
+	return json.decode(res.body), res.status_code
 end
 
 function gamepart(addr, token, gid)
@@ -107,19 +118,24 @@ function gamepart(addr, token, gid)
 		},
 		body=json.encode({gid=gid})
 	})
-	checkres(res, err)
+	if err ~= nil then
+		error(err)
+	end
+	return nil, res.status_code
 end
 
-function gamestate(addr, token, gid)
-	local res, err = http.post(addr.."/game/state", {
+function gameinfo(addr, token, gid)
+	local res, err = http.post(addr.."/game/info", {
 		headers={
 			["Content-Type"]="application/json",
 			["Authorization"] = "Bearer "..token,
 		},
 		body=json.encode({gid=gid})
 	})
-	checkres(res, err)
-	return json.decode(res.body)
+	if err ~= nil then
+		error(err)
+	end
+	return json.decode(res.body), res.status_code
 end
 
 function gamebetget(addr, token, gid)
@@ -130,9 +146,11 @@ function gamebetget(addr, token, gid)
 		},
 		body=json.encode({gid=gid})
 	})
-	checkres(res, err)
+	if err ~= nil then
+		error(err)
+	end
 	local t = json.decode(res.body)
-	return t.bet
+	return t.bet, res.status_code
 end
 
 function gamebetset(addr, token, gid, bet)
@@ -143,7 +161,10 @@ function gamebetset(addr, token, gid, bet)
 		},
 		body=json.encode({gid=gid, bet=bet})
 	})
-	checkres(res, err)
+	if err ~= nil then
+		error(err)
+	end
+	return json.decode(res.body), res.status_code
 end
 
 function gamesblget(addr, token, gid)
@@ -154,9 +175,11 @@ function gamesblget(addr, token, gid)
 		},
 		body=json.encode({gid=gid})
 	})
-	checkres(res, err)
+	if err ~= nil then
+		error(err)
+	end
 	local t = json.decode(res.body)
-	return t.sbl
+	return t.sbl, res.status_code
 end
 
 function gamesblset(addr, token, gid, sbl)
@@ -167,7 +190,10 @@ function gamesblset(addr, token, gid, sbl)
 		},
 		body=json.encode({gid=gid, sbl=sbl})
 	})
-	checkres(res, err)
+	if err ~= nil then
+		error(err)
+	end
+	return nil, res.status_code
 end
 
 function gamereelsget(addr, token, gid)
@@ -178,20 +204,25 @@ function gamereelsget(addr, token, gid)
 		},
 		body=json.encode({gid=gid})
 	})
-	checkres(res, err)
+	if err ~= nil then
+		error(err)
+	end
 	local t = json.decode(res.body)
-	return t.rd
+	return t.rtp, res.status_code
 end
 
-function gamereelsset(addr, token, gid, rd)
+function gamereelsset(addr, token, gid, rtp)
 	local res, err = http.post(addr.."/game/reels/set", {
 		headers={
 			["Content-Type"]="application/json",
 			["Authorization"] = "Bearer "..token,
 		},
-		body=json.encode({gid=gid, rd=rd})
+		body=json.encode({gid=gid, rtp=rtp})
 	})
-	checkres(res, err)
+	if err ~= nil then
+		error(err)
+	end
+	return nil, res.status_code
 end
 
 function gamespin(addr, token, gid)
@@ -202,8 +233,10 @@ function gamespin(addr, token, gid)
 		},
 		body=json.encode({gid=gid})
 	})
-	checkres(res, err)
-	return json.decode(res.body)
+	if err ~= nil then
+		error(err)
+	end
+	return json.decode(res.body), res.status_code
 end
 
 function gamedoubleup(addr, token, gid, mult)
@@ -214,8 +247,10 @@ function gamedoubleup(addr, token, gid, mult)
 		},
 		body=json.encode({gid=gid, mult=mult or 2})
 	})
-	checkres(res, err)
-	return json.decode(res.body)
+	if err ~= nil then
+		error(err)
+	end
+	return json.decode(res.body), res.status_code
 end
 
 function gamecollect(addr, token, gid)
@@ -226,7 +261,10 @@ function gamecollect(addr, token, gid)
 		},
 		body=json.encode({gid=gid})
 	})
-	checkres(res, err)
+	if err ~= nil then
+		error(err)
+	end
+	return nil, res.status_code
 end
 
 function propwalletget(addr, token, cid, uid)
@@ -237,9 +275,11 @@ function propwalletget(addr, token, cid, uid)
 		},
 		body=json.encode({cid=cid, uid=uid})
 	})
-	checkres(res, err)
+	if err ~= nil then
+		error(err)
+	end
 	local t = json.decode(res.body)
-	return t.wallet
+	return t.wallet, res.status_code
 end
 
 function propwalletadd(addr, token, cid, uid, sum)
@@ -250,7 +290,9 @@ function propwalletadd(addr, token, cid, uid, sum)
 		},
 		body=json.encode({cid=cid, uid=uid, sum=sum})
 	})
-	checkres(res, err)
+	if err ~= nil then
+		error(err)
+	end
 	local t = json.decode(res.body)
-	return t.wallet
+	return t.wallet, res.status_code
 end

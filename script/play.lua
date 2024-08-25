@@ -25,7 +25,7 @@ if not cid then
 	cid = 1
 end
 if not email then
-	email, secret, name = "player@example.org", "Et7oAm", "player"
+	email, secret, name = "player@example.org", "iVI05M", "player"
 	fmt(lt.warn, "work with default user '%s'", name)
 end
 if not jobtime then
@@ -34,60 +34,131 @@ end
 if not speed then
 	speed = 1
 end
+if not gameset then
+	gameset = {
+		{
+			gid = 0,
+			alias = "dolphinspearl",
+			changesbl = true,
+			bet = 1, sln = 5,
+			fs = 0, gain = 0,
+		},
+	}
+end
 
 local spincount = 0
 
 local betset = {0.1, 0.2, 0.5, 1, 2, 5, 10}
-local bet, sbl = 1, 5
+local sumset = {50, 100, 100, 200, 250, 500, 1000} -- set of sums to add to wallet
+local uid, wallet = 0, 0
+local usrtoken
 
-sleep(speed*random(0, 600)) -- before start
+local game = {} -- game settings from gameset array
+local errmsg = [[status: %d, code: %d, message: %s,
+alias: %s, uid: %d, gid: %d, wallet: %.7g, bet: %.7g, sln: %d,
+spincount: %d
+]]
+local function checkres(res, status)
+	if status >= 400 then
+		res = res or {}
+		print(string.format(errmsg,
+			status, res.code, res.what,
+			game.alias, uid, game.gid, wallet, game.bet, game.sln,
+			spincount), debug.traceback())
+		os.exit(1)
+	end
+	return res
+end
+local function checkbody(res, status)
+	if not res then
+		print(string.format(errmsg,
+			status, 0, "get nil body response",
+			game.alias, uid, game.gid, wallet, game.bet, game.sln,
+			spincount), debug.traceback())
+		os.exit(1)
+	elseif status >= 400 then
+		print(string.format(errmsg,
+			status, res.code, res.what,
+			game.alias, uid, game.gid, wallet, game.bet, game.sln,
+			spincount), debug.traceback())
+		print("sln from game:", getbitnum(checkres(gamesblget(addr, usrtoken, game.gid))))
+		os.exit(1)
+	end
+	return res
+end
 
--- login admin to add money to wallet
-local admin = signin(addr, "admin@example.org", "pGjkSD")
-fmt(lt.sign, "[signin-admin] user: %s, expire: %s", name, admin.expire)
+local res -- result of query
 
 -- login and create registration if it needed
-if signis(addr, email) == 0 then
-	local uid = signup(addr, email, secret, name)
+uid = checkbody(signis(addr, email))
+if uid == 0 then
+	uid = checkbody(signup(addr, email, secret, name))
 	fmt(lt.info, "created new registration with uid=%d", uid)
 end
-local user = signin(addr, email, secret)
-fmt(lt.sign, "[signin] uid: %d, expire: %s", user.uid, user.expire)
+res = checkbody(signin(addr, email, secret))
+uid, usrtoken = res.uid, res.access
+fmt(lt.sign, "[signin] uid: %d, secret: %s", uid, secret)
+if signctx then
+	signctx:send(uid)
+end
 sleep(speed*random(400, 600)) -- after login
 
--- check money at wallet
-if propwalletget(addr, user.access, cid, user.uid) < bet*sbl then
-	local wallet = propwalletadd(addr, admin.access, cid, user.uid, 1000)
-	fmt(lt.cash, "[walletadd] cid: %d, uid: %d, wallet: %.7g", cid, user.uid, wallet)
-	sleep(speed*random(2000, 5000))
+for _, v in pairs(gameset) do
+	game = v
+	-- join game
+	res = checkbody(gamejoin(addr, usrtoken, cid, uid, game.alias))
+	game.gid, wallet = res.gid, res.wallet
+	fmt(lt.gset, "[join] cid: %d, uid: %d, gid: %d", cid, uid, game.gid)
+	sleep(speed*random(300, 600)) -- after game join
+
+	-- change bet value before spins
+	checkres(gamebetset(addr, usrtoken, game.gid, game.bet))
+	fmt(lt.gset, "[betset] gid: %d, bet: %.7g", game.gid, game.bet)
+	sleep(speed*400) -- after bet value
+	-- change bet lines before spins
+	if game.sln > 0 then
+		checkres(gamesblset(addr, usrtoken, game.gid, makebitnum(game.sln)))
+		fmt(lt.gset, "[sblset] gid: %d, sln: %d", game.gid, game.sln)
+		sleep(speed*400) -- after bet lines
+	else
+		game.sln = getbitnum(checkres(gamesblget(addr, usrtoken, game.gid)))
+	end
 end
 
--- join game
-local game = gamejoin(addr, user.access, cid, user.uid, "dolphinspearl")
-fmt(lt.gset, "[join] cid: %d, uid: %d, gid: %d", cid, user.uid, game.gid)
-sleep(speed*random(300, 600)) -- after game join
-
--- change bet value
-gamebetset(addr, user.access, game.gid, bet)
-fmt(lt.gset, "[betset] gid: %d, bet: %.7g", game.gid, bet)
-sleep(speed*400) -- after bet value
--- change bet lines, set 5 lines
-gamesblset(addr, user.access, game.gid, makebitnum(sbl))
-fmt(lt.gset, "[sblset] gid: %d, sbl: %d", game.gid, sbl)
-sleep(speed*400) -- after bet lines
+sleep(speed*random(0, 800)) -- pause before spins
 
 -- make some spins in the loop
 while os.clock () < jobtime do
+	game = gameset[random(#gameset)]
+
+	-- check money at wallet
+	if wallet < game.bet*game.sln then
+		local sum
+		repeat
+			sum = sumset[random(#sumset)]
+		until wallet + sum >= game.bet*game.sln
+		wallet = checkbody(propwalletadd(addr, admtoken, cid, uid, sum))
+		fmt(lt.cash, "[walletadd] cid: %d, uid: %d, bet: %.7g, sln: %d, wallet: %.7g, sum: %.7g",
+			cid, uid, game.bet, game.sln, wallet, sum)
+		sleep(speed*random(2000, 5000))
+	end
+
 	-- make spin
 	sleep(speed*random(1200, 1400)) -- reels rotation timeout
-	local res = gamespin(addr, user.access, game.gid)
-	fmt(lt.spin, "[spin] gid: %d, sid: %d, wallet: %.7g, gain: %.7g", game.gid, res.sid, res.wallet, res.game.gain or 0)
+	res = checkbody(gamespin(addr, usrtoken, game.gid))
+	if not res then
+		break
+	end
+	wallet, game.gain, game.bet, game.sln, game.fs =
+		res.wallet, res.game.gain or 0, res.game.bet, getbitnum(res.game.sbl), res.game.fs or 0
+	fmt(lt.spin, "[spin] gid: %d, sid: %d, fs: %d, wallet: %.7g, gain: %.7g",
+		game.gid, res.sid, game.fs, wallet, game.gain)
 	spincount = spincount + 1
 	for _, wi in ipairs(res.wins or {}) do
 		fmt(lt.spec, "sym: %dx%d, pay: %.7gx%d", wi.sym, wi.num, wi.pay or 0, wi.mult or 0)
 		if wi.free then
 			sleep(speed*3000) -- free spins starts
-		elseif (wi.pay or 0)*(wi.mult or 0) > 100*res.game.bet then
+		elseif (wi.pay or 0)*(wi.mult or 0) > 100*game.bet then
 			sleep(speed*1200) -- big win
 		else
 			sleep(speed*100*random(4, 6)) -- normal win
@@ -95,47 +166,40 @@ while os.clock () < jobtime do
 	end
 
 	-- make doubleup sometimes
-	if res.game.fs == 0 and res.game.gain and random() < 0.25 then
-		local dbl
+	if game.fs == 0 and game.gain > 0 and random() < 0.25 then
 		repeat
-			dbl = gamedoubleup(addr, user.access, game.gid, 2)
-			fmt(lt.spin, "[doubleup] gid: %d, sid: %d, gain: %.7g", game.gid, dbl.sid, dbl.gain)
+			res = checkbody(gamedoubleup(addr, usrtoken, game.gid, 2))
+			wallet = res.wallet
+			fmt(lt.spin, "[doubleup] gid: %d, id: %d, gain: %.7g", game.gid, res.id, res.gain)
 			sleep(speed*random(1000, 1200)) -- doubleup step
-		until dbl.gain == 0 or random() > 0.40
-		if dbl.gain > 0 then
-			gamecollect(addr, user.access, game.gid)
+		until res.gain == 0 or random() > 0.40
+		if res.gain > 0 then
+			checkres(gamecollect(addr, usrtoken, game.gid))
 			fmt(lt.spin, "[collect] gid: %d", game.gid)
 			sleep(speed*random(600, 800)) -- doubleup end
 		end
 	end
 
 	-- change bet value sometimes
-	if res.game.fs == 0 and random() < 1/50 then
-		bet = betset[random(#betset)]
-		gamebetset(addr, user.access, game.gid, bet)
-		fmt(lt.gset, "[betset] gid: %d, bet: %.7g", game.gid, bet)
+	if game.fs == 0 and random() < 1/50 then
+		game.bet = betset[random(#betset)]
+		checkres(gamebetset(addr, usrtoken, game.gid, game.bet))
+		fmt(lt.gset, "[betset] gid: %d, bet: %.7g", game.gid, game.bet)
 		sleep(speed*600) -- after bet value
 	end
 
 	-- change selected bet lines sometimes
-	if res.game.fs == 0 and random() < 1/50 then
-		sbl = random(3, 10)
-		gamesblset(addr, user.access, game.gid, makebitnum(sbl))
-		fmt(lt.gset, "[sblset] gid: %d, sbl: %d", game.gid, sbl)
+	if game.changesbl and game.fs == 0 and random() < 1/50 then
+		game.sln = random(3, 10)
+		checkres(gamesblset(addr, usrtoken, game.gid, makebitnum(game.sln)))
+		fmt(lt.gset, "[sblset] gid: %d, sln: %d", game.gid, game.sln)
 		sleep(speed*600) -- after bet lines
 	end
 
-	-- check money at wallet
-	if res.wallet < bet*sbl then
-		local wallet = propwalletadd(addr, admin.access, cid, user.uid, 1000)
-		fmt(lt.cash, "[walletadd] cid: %d, uid: %d, wallet: %.7g", cid, user.uid, wallet)
-		sleep(speed*random(2000, 5000))
-	end
-
 	-- pause sometimes
-	if res.game.fs == 0 and random() < 1/100 then
+	if game.fs == 0 and random() < 1/100 then
 		local d = random(3, 15)
-		fmt(lt.info, "uid: %d, let's pause %d seconds", user.uid, d)
+		fmt(lt.info, "uid: %d, let's pause %d seconds", uid, d)
 		sleep(speed*d*1000)
 	end
 
@@ -143,7 +207,7 @@ while os.clock () < jobtime do
 	local exit = false
 	channel.select(
 		{"|<-", quit, function()
-			fmt(lt.info, "quit by break")
+			fmt(lt.info, "uid: %d, quit by break", uid)
 			exit = true
 		end},
 		{"default", function()
@@ -154,8 +218,12 @@ while os.clock () < jobtime do
 	end
 end
 
--- part game
-gamepart(addr, user.access, game.gid)
-fmt(lt.gset, "[part] cid: %d, uid: %d, gid: %d", cid, user.uid, game.gid)
+for _, v in pairs(gameset) do
+	game = v
+	-- part game
+	checkres(gamepart(addr, usrtoken, game.gid))
+	fmt(lt.gset, "[part] cid: %d, uid: %d, gid: %d", cid, uid, game.gid)
+	sleep(speed*100)
+end
 
-fmt(lt.info, "uid: %d, job complete, %d spins done.", user.uid, spincount)
+fmt(lt.info, "uid: %d, job complete, %d spins done.", uid, spincount)
