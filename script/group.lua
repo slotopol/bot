@@ -23,7 +23,7 @@ local function makepass(n)
 end
 
 -- load games set
-local games, gamenum = dofile(scrdir.."/games.lua")
+local games, gamenum = dofile(scrdir.."/lib/games.lua")
 
 local exit = channel.make()
 local signctx = channel.make() -- signin context
@@ -56,7 +56,7 @@ for i = 1, usrnum do
 end
 
 -- load API-calls
-dofile(scrdir.."/api.lua")
+dofile(scrdir.."/lib/api.lua")
 
 -- login admin to add money to wallet
 local admin, status = signin(options.addr, "admin@example.org", "0YBoaT")
@@ -86,7 +86,7 @@ for i = 1, usrnum do
 	-- start thread
 	thread(
 		users[i], options, {gameset = gameset}, exit,
-		scrdir.."/api.lua", scrdir.."/play.lua"
+		scrdir.."/lib/api.lua", scrdir.."/lib/play.lua"
 	)
 	signctx:receive()
 end

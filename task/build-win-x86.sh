@@ -3,7 +3,7 @@
 
 wd=$(realpath -s "$(dirname "$0")/..")
 
-cp -ruv "$wd/script/"* "$GOPATH/bin/config/bot"
+cp -ruv "$wd/script/"* "$GOPATH/bin/script"
 
 buildvers=$(git describe --tags)
 buildtime=$(go run "$wd/task/timenow.go") # $(date -u +'%FT%TZ')

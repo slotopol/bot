@@ -2,7 +2,7 @@
 rem This script compiles project for Windows amd64.
 set wd=%~dp0..
 
-xcopy %wd%\script %GOPATH%\bin\config\bot /f /d /i /e /k /y
+xcopy %wd%\script %GOPATH%\bin\script /f /d /i /e /k /y
 
 for /F "tokens=*" %%g in ('git describe --tags') do (set buildvers=%%g)
 for /F "tokens=*" %%g in ('go run %~dp0/timenow.go') do (set buildtime=%%g)

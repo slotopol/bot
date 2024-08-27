@@ -24,7 +24,7 @@ jobtime = 15*60 -- 15m
 speed = 1
 
 -- load games set
-local games, gamenum = dofile(scrdir.."/games.lua")
+local games, gamenum = dofile(scrdir.."/lib/games.lua")
 local n = gamenum[math.random(#gamenum)]
 gameset = {}
 for j = 1, n do
@@ -32,7 +32,7 @@ for j = 1, n do
 end
 
 -- load API-calls
-dofile(scrdir.."/api.lua")
+dofile(scrdir.."/lib/api.lua")
 
 -- login admin to add money to wallet
 local admin, status = signin(addr, "admin@example.org", "0YBoaT")
@@ -45,4 +45,4 @@ fmt("signed in admin account with uid=%d, token expires: %s", admin.uid, admin.e
 
 -- execute single thread
 fmt("start %d games", n)
-dofile(scrdir.."/play.lua")
+dofile(scrdir.."/lib/play.lua")
