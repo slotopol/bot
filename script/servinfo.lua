@@ -4,12 +4,12 @@ local function fmt(...) -- write to log formatted string
 	print(string.format(...))
 end
 
-addr = "http://localhost:8080"
+slotopolhost = "http://localhost:8080"
 
 -- load API-calls
 dofile(scrdir.."/lib/api.lua")
 
-local info, status = servinfo(addr)
+local info, status = servinfo()
 if status >= 400 then
 	fmt("failure to get server info, status: %d, code: %d, message: %s", status, info.code, info.what)
 	return

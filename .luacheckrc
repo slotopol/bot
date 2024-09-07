@@ -6,15 +6,15 @@
 globals = {
 	-- variables
 	"signctx", "admtoken",
-	"lt", "addr", "cid", "email", "secret", "name", "jobtime", "speed", "gameset",
+	"lt", "slotopolhost", "cid", "email", "secret", "name", "jobtime", "speed", "gameset",
 	-- functions
 	"getbitnum", "makebitnum",
 	"servinfo", "memusage", "gamelist",
-	"signis", "signup", "signin", "refresh",
-	"gamejoin", "gamepart", "gameinfo",
-	"gamebetget", "gamebetset", "gamesblget", "gamesblset", "gamereelsget", "gamereelsset",
-	"gamespin", "gamedoubleup", "gamecollect",
-	"propwalletget", "propwalletadd",
+	"signis", "signup", "admsignup", "signin", "refresh",
+	"slotjoin", "slotpart", "slotinfo",
+	"slotbetget", "slotbetset", "slotsblget", "slotsblset", "slotrtpget",
+	"slotspin", "slotdoubleup", "slotcollect",
+	"propwalletget", "propwalletadd", "propaccessget", "propaccessset", "proprtpget", "proprtpset",
 }
 
 read_globals = {

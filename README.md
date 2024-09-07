@@ -10,7 +10,7 @@ Serves to run scenarios that emulate the natural work of users, allows you to te
 
 # How it working
 
-Bot have host engine with provided Lua-API and scripts running over this this engine. Engine provides API for [http-calls](github.com/cjoudrey/gluahttp), [JSON parser](github.com/layeh/gopher-json), [crypto](github.com/tengattack/gluacrypto) algorithms, path-functions, and some top-level API functions, see `runlvm.go`. Including two main functions to build scripts workflow: `thread` function, and `sleep` function.
+Bot have host engine with provided Lua-API and scripts running over this engine. Engine provides API for [http-calls](github.com/cjoudrey/gluahttp), [JSON parser](github.com/layeh/gopher-json), [crypto](github.com/tengattack/gluacrypto) algorithms, path-functions, and some top-level API functions, see `runlvm.go`. Including two main functions to build scripts workflow: `thread` function, and `sleep` function.
 
 Because the Lua virtual machine can only run in one system thread, `thread` functions creates new Lua virtual machine with all API registrations, that can be run at another goroutine. Function receives list of tables and strings in any order. Any given table spreads and all it's items sets to global scope to new created VM. So all items of table must have string keys, to get access in this VM. Values can be strings, numbers, booleans, tables without metatable. Any given string to `thread` function assumed as path to script that will be executed in new VM. Also to `thread` function can be given channel that assumed as exit channel. When job will be complete nil value will be sent to exit channel on success, or error message if error occurs.
 

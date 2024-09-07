@@ -25,274 +25,148 @@ function makebitnum(num)
 	return lshift(lshift(1, num) - 1, 1)
 end
 
-function servinfo(addr)
-	local res, err = http.get(addr.."/servinfo")
-	if err ~= nil then
-		error(err)
-	end
-	return json.decode(res.body), res.status_code
-end
+local addr = slotopolhost
 
-function memusage(addr)
-	local res, err = http.get(addr.."/memusage")
-	if err ~= nil then
-		error(err)
-	end
-	return json.decode(res.body), res.status_code
-end
-
-function gamelist(addr)
-	local res, err = http.get(addr.."/gamelist")
-	if err ~= nil then
-		error(err)
-	end
-	return json.decode(res.body), res.status_code
-end
-
-function signis(addr, email)
-	local res, err = http.get(addr.."/signis", {query="email="..email})
-	if err ~= nil then
-		error(err)
-	end
-	local t = json.decode(res.body)
-	return t.uid, res.status_code
-end
-
-function signup(addr, email, secret, name)
-	local res, err = http.post(addr.."/signup", {
-		headers={["Content-Type"]="application/json"},
-		body=json.encode({email=email, secret=secret, name=name}),
+local function httpget(path, query)
+	local res, err = http.get(addr..path, {
+		headers={
+			["Accept"]="application/json",
+		},
+		query=query
 	})
 	if err ~= nil then
 		error(err)
 	end
-	local t = json.decode(res.body)
-	return t.uid, res.status_code
+	return json.decode(res.body), res.status_code
 end
 
-function signin(addr, email, secret)
+local function httppost(path, body)
+	local res, err = http.post(addr..path, {
+		headers={
+			["Content-Type"]="application/json",
+			["Accept"]="application/json",
+		},
+		body=json.encode(body)
+	})
+	if err ~= nil then
+		error(err)
+	end
+	return json.decode(res.body), res.status_code
+end
+
+local function authpost(path, token, body)
+	local res, err = http.post(addr..path, {
+		headers={
+			["Content-Type"]="application/json",
+			["Accept"]="application/json",
+			["Authorization"] = "Bearer "..token,
+		},
+		body=json.encode(body)
+	})
+	if err ~= nil then
+		error(err)
+	end
+	return json.decode(res.body), res.status_code
+end
+
+function servinfo()
+	return httpget("/servinfo", nil)
+end
+
+function memusage()
+	return httpget("/memusage", nil)
+end
+
+function gamelist()
+	return httpget("/gamelist", nil)
+end
+
+function signis(email)
+	return httpget("/signis", "email="..email)
+end
+
+function signup(email, secret, name)
+	return httppost("/signup", {email=email, secret=secret, name=name})
+end
+
+function admsignup(token, email, secret, name)
+	return authpost("/signup", token, {email=email, secret=secret, name=name})
+end
+
+function signin(email, secret)
 	local sigtime = os.date('%Y-%m-%dT%H:%M:%SZ')
 	local hs256 = crypto.hmac("sha256", secret, sigtime)
-	local res, err = http.post(addr.."/signin", {
-		headers={["Content-Type"]="application/json"},
-		body=json.encode({email=email, hs256=hs256, sigtime=sigtime})
-	})
-	if err ~= nil then
-		error(err)
-	end
-	return json.decode(res.body), res.status_code
+	return httppost("/signin", {email=email, hs256=hs256, sigtime=sigtime})
 end
 
-function refresh(addr, token)
-	local res, err = http.get(addr.."/signin", {
-		headers={
-			["Content-Type"] = "application/json",
-			["Authorization"] = "Bearer "..token,
-		},
-	})
-	if err ~= nil then
-		error(err)
-	end
-	return json.decode(res.body), res.status_code
+function refresh(token)
+	return authpost("/refresh", token, nil)
 end
 
-function gamejoin(addr, token, cid, uid, alias)
-	local res, err = http.post(addr.."/game/join", {
-		headers={
-			["Content-Type"]="application/json",
-			["Authorization"] = "Bearer "..token,
-		},
-		body=json.encode({cid=cid, uid=uid, alias=alias})
-	})
-	if err ~= nil then
-		error(err)
-	end
-	return json.decode(res.body), res.status_code
+function slotjoin(token, cid, uid, alias)
+	return authpost("/slot/join", token, {cid=cid, uid=uid, alias=alias})
 end
 
-function gamepart(addr, token, gid)
-	local res, err = http.post(addr.."/game/part", {
-		headers={
-			["Content-Type"]="application/json",
-			["Authorization"] = "Bearer "..token,
-		},
-		body=json.encode({gid=gid})
-	})
-	if err ~= nil then
-		error(err)
-	end
-	return nil, res.status_code
+function slotpart(token, gid)
+	return authpost("/slot/part", token, {gid=gid})
 end
 
-function gameinfo(addr, token, gid)
-	local res, err = http.post(addr.."/game/info", {
-		headers={
-			["Content-Type"]="application/json",
-			["Authorization"] = "Bearer "..token,
-		},
-		body=json.encode({gid=gid})
-	})
-	if err ~= nil then
-		error(err)
-	end
-	return json.decode(res.body), res.status_code
+function slotinfo(token, gid)
+	return authpost("/slot/info", token, {gid=gid})
 end
 
-function gamebetget(addr, token, gid)
-	local res, err = http.post(addr.."/game/bet/get", {
-		headers={
-			["Content-Type"]="application/json",
-			["Authorization"] = "Bearer "..token,
-		},
-		body=json.encode({gid=gid})
-	})
-	if err ~= nil then
-		error(err)
-	end
-	local t = json.decode(res.body)
-	return t.bet, res.status_code
+function slotbetget(token, gid)
+	return authpost("/slot/bet/get", token, {gid=gid})
 end
 
-function gamebetset(addr, token, gid, bet)
-	local res, err = http.post(addr.."/game/bet/set", {
-		headers={
-			["Content-Type"]="application/json",
-			["Authorization"] = "Bearer "..token,
-		},
-		body=json.encode({gid=gid, bet=bet})
-	})
-	if err ~= nil then
-		error(err)
-	end
-	return json.decode(res.body), res.status_code
+function slotbetset(token, gid, bet)
+	return authpost("/slot/bet/set", token, {gid=gid, bet=bet})
 end
 
-function gamesblget(addr, token, gid)
-	local res, err = http.post(addr.."/game/sbl/get", {
-		headers={
-			["Content-Type"]="application/json",
-			["Authorization"] = "Bearer "..token,
-		},
-		body=json.encode({gid=gid})
-	})
-	if err ~= nil then
-		error(err)
-	end
-	local t = json.decode(res.body)
-	return t.sbl, res.status_code
+function slotsblget(token, gid)
+	return authpost("/slot/sbl/get", token, {gid=gid})
 end
 
-function gamesblset(addr, token, gid, sbl)
-	local res, err = http.post(addr.."/game/sbl/set", {
-		headers={
-			["Content-Type"]="application/json",
-			["Authorization"] = "Bearer "..token,
-		},
-		body=json.encode({gid=gid, sbl=sbl})
-	})
-	if err ~= nil then
-		error(err)
-	end
-	return nil, res.status_code
+function slotsblset(token, gid, sbl)
+	return authpost("/slot/sbl/set", token, {gid=gid, sbl=sbl})
 end
 
-function gamereelsget(addr, token, gid)
-	local res, err = http.post(addr.."/game/reels/get", {
-		headers={
-			["Content-Type"]="application/json",
-			["Authorization"] = "Bearer "..token,
-		},
-		body=json.encode({gid=gid})
-	})
-	if err ~= nil then
-		error(err)
-	end
-	local t = json.decode(res.body)
-	return t.rtp, res.status_code
+function slotrtpget(token, gid)
+	return authpost("/slot/rtp/get", token, {gid=gid})
 end
 
-function gamereelsset(addr, token, gid, rtp)
-	local res, err = http.post(addr.."/game/reels/set", {
-		headers={
-			["Content-Type"]="application/json",
-			["Authorization"] = "Bearer "..token,
-		},
-		body=json.encode({gid=gid, rtp=rtp})
-	})
-	if err ~= nil then
-		error(err)
-	end
-	return nil, res.status_code
+function slotspin(token, gid)
+	return authpost("/slot/spin", token, {gid=gid})
 end
 
-function gamespin(addr, token, gid)
-	local res, err = http.post(addr.."/game/spin", {
-		headers={
-			["Content-Type"]="application/json",
-			["Authorization"] = "Bearer "..token,
-		},
-		body=json.encode({gid=gid})
-	})
-	if err ~= nil then
-		error(err)
-	end
-	return json.decode(res.body), res.status_code
+function slotdoubleup(token, gid, mult)
+	return authpost("/slot/doubleup", token, {gid=gid, mult=mult or 2})
 end
 
-function gamedoubleup(addr, token, gid, mult)
-	local res, err = http.post(addr.."/game/doubleup", {
-		headers={
-			["Content-Type"]="application/json",
-			["Authorization"] = "Bearer "..token,
-		},
-		body=json.encode({gid=gid, mult=mult or 2})
-	})
-	if err ~= nil then
-		error(err)
-	end
-	return json.decode(res.body), res.status_code
+function slotcollect(token, gid)
+	return authpost("/slot/collect", token, {gid=gid})
 end
 
-function gamecollect(addr, token, gid)
-	local res, err = http.post(addr.."/game/collect", {
-		headers={
-			["Content-Type"]="application/json",
-			["Authorization"] = "Bearer "..token,
-		},
-		body=json.encode({gid=gid})
-	})
-	if err ~= nil then
-		error(err)
-	end
-	return nil, res.status_code
+function propwalletget(token, cid, uid)
+	return authpost("/prop/wallet/get", token, {cid=cid, uid=uid})
 end
 
-function propwalletget(addr, token, cid, uid)
-	local res, err = http.post(addr.."/prop/wallet/get", {
-		headers={
-			["Content-Type"]="application/json",
-			["Authorization"] = "Bearer "..token,
-		},
-		body=json.encode({cid=cid, uid=uid})
-	})
-	if err ~= nil then
-		error(err)
-	end
-	local t = json.decode(res.body)
-	return t.wallet, res.status_code
+function propwalletadd(token, cid, uid, sum)
+	return authpost("/prop/wallet/add", token, {cid=cid, uid=uid, sum=sum})
 end
 
-function propwalletadd(addr, token, cid, uid, sum)
-	local res, err = http.post(addr.."/prop/wallet/add", {
-		headers={
-			["Content-Type"]="application/json",
-			["Authorization"] = "Bearer "..token,
-		},
-		body=json.encode({cid=cid, uid=uid, sum=sum})
-	})
-	if err ~= nil then
-		error(err)
-	end
-	local t = json.decode(res.body)
-	return t.wallet, res.status_code
+function propaccessget(token, cid, uid)
+	return authpost("/prop/al/get", token, {cid=cid, uid=uid})
+end
+
+function propaccessset(token, cid, uid, al)
+	return authpost("/prop/wallet/add", token, {cid=cid, uid=uid, access=al})
+end
+
+function proprtpget(token, cid, uid)
+	return authpost("/prop/al/get", token, {cid=cid, uid=uid})
+end
+
+function proprtpset(token, cid, uid, mrtp)
+	return authpost("/prop/wallet/add", token, {cid=cid, uid=uid, mrtp=mrtp})
 end

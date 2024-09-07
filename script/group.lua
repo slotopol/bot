@@ -27,7 +27,7 @@ local games, gamenum = dofile(scrdir.."/lib/games.lua")
 
 local exit = channel.make()
 local signctx = channel.make() -- signin context
-local usrnum = 500 -- number of players to run
+local usrnum = 1500 -- number of players to run
 local options = { -- shared options for each player
 	lt = {
 		warn = true,
@@ -38,7 +38,7 @@ local options = { -- shared options for each player
 		spin = false,
 		spec = false,
 	},
-	addr = "http://localhost:8080",
+	slotopolhost = "http://localhost:8080",
 	cid = 1,
 	jobtime = 5*60, -- 5m
 	speed = 1, -- make it less than 1 to run faster
@@ -55,11 +55,13 @@ for i = 1, usrnum do
 	}
 end
 
+slotopolhost = "http://localhost:8080"
+
 -- load API-calls
 dofile(scrdir.."/lib/api.lua")
 
 -- login admin to add money to wallet
-local admin, status = signin(options.addr, "admin@example.org", "0YBoaT")
+local admin, status = signin("admin@example.org", "0YBoaT")
 if status >= 400 then
 	fmt("can not login admin account, status: %d, code: %d, message: %s", status, admin.code, admin.what)
 	return
