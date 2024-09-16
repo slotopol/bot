@@ -103,16 +103,20 @@ function refresh(token)
 	return authpost("/refresh", token, nil)
 end
 
-function slotjoin(token, cid, uid, alias)
-	return authpost("/slot/join", token, {cid=cid, uid=uid, alias=alias})
+function gamejoin(token, cid, uid, alias)
+	return authpost("/game/join", token, {cid=cid, uid=uid, alias=alias})
 end
 
-function slotpart(token, gid)
-	return authpost("/slot/part", token, {gid=gid})
+function gamepart(token, gid)
+	return authpost("/game/part", token, {gid=gid})
 end
 
-function slotinfo(token, gid)
-	return authpost("/slot/info", token, {gid=gid})
+function gameinfo(token, gid)
+	return authpost("/game/info", token, {gid=gid})
+end
+
+function gamertpget(token, gid)
+	return authpost("/game/rtp/get", token, {gid=gid})
 end
 
 function slotbetget(token, gid)
@@ -123,16 +127,12 @@ function slotbetset(token, gid, bet)
 	return authpost("/slot/bet/set", token, {gid=gid, bet=bet})
 end
 
-function slotsblget(token, gid)
-	return authpost("/slot/sbl/get", token, {gid=gid})
+function slotselget(token, gid)
+	return authpost("/slot/sel/get", token, {gid=gid})
 end
 
-function slotsblset(token, gid, sbl)
-	return authpost("/slot/sbl/set", token, {gid=gid, sbl=sbl})
-end
-
-function slotrtpget(token, gid)
-	return authpost("/slot/rtp/get", token, {gid=gid})
+function slotselset(token, gid, sel)
+	return authpost("/slot/sel/set", token, {gid=gid, sel=sel})
 end
 
 function slotspin(token, gid)

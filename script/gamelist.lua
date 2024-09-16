@@ -21,7 +21,11 @@ for _, gi in ipairs(gl) do
 	alg = alg + 1
 	for _, ga in ipairs(gi.aliases) do
 		num = num + 1
-		list[num] = string.format("'%s' %s %dx%d videoslot", ga.name, gi.provider, gi.scrnx, gi.scrny)
+		if gi.scrny > 0 then
+			list[num] = string.format("'%s' %s %dx%d videoslot", ga.name, gi.provider, gi.scrnx, gi.scrny)
+		else
+			list[num] = string.format("'%s' %s %d spots lottery", ga.name, gi.provider, gi.scrnx)
+		end
 	end
 end
 table.sort(list)

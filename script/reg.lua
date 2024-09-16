@@ -43,7 +43,7 @@ local function checkbody(f, ...)
 	return res
 end
 
-local usrnum = 5 -- number of players to run
+local usrnum = 5000 -- number of players to run
 
 -- prepare users table before anything to keep passwords sequences
 local users = {}

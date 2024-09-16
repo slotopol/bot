@@ -27,7 +27,7 @@ local games, gamenum = dofile(scrdir.."/lib/games.lua")
 
 local exit = channel.make()
 local signctx = channel.make() -- signin context
-local usrnum = 1500 -- number of players to run
+local usrnum = 500 -- number of players to run
 local options = { -- shared options for each player
 	lt = {
 		warn = true,

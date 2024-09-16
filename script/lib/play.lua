@@ -143,9 +143,9 @@ sleep(speed*random(400, 600)) -- after login
 for _, v in pairs(gameset) do
 	game = v
 	-- join game
-	res = checkbody(slotjoin, usrtoken, cid, uid, game.alias)
+	res = checkbody(gamejoin, usrtoken, cid, uid, game.alias)
 	game.gid, wallet = res.gid, res.wallet
-	fmt(lt.gset, "[join] cid: %d, uid: %d, gid: %d", cid, uid, game.gid)
+	fmt(lt.gset, "[join] cid: %d, uid: %d, gid: %d, alias: %s", cid, uid, game.gid, game.alias)
 	sleep(speed*random(300, 600)) -- after game join
 
 	-- change bet value before spins
@@ -154,11 +154,11 @@ for _, v in pairs(gameset) do
 	sleep(speed*400) -- after bet value
 	-- change bet lines before spins
 	if game.sln > 0 then
-		checkres(slotsblset, usrtoken, game.gid, makebitnum(game.sln))
+		checkres(slotselset, usrtoken, game.gid, makebitnum(game.sln))
 		fmt(lt.gset, "[sblset] gid: %d, sln: %d", game.gid, game.sln)
 		sleep(speed*400) -- after bet lines
 	else
-		game.sln = getbitnum(checkres(slotsblget, usrtoken, game.gid).sbl)
+		game.sln = getbitnum(checkres(slotselget, usrtoken, game.gid).sel)
 	end
 end
 
@@ -187,7 +187,7 @@ while os.clock () < jobtime do
 		break
 	end
 	wallet, game.gain, game.bet, game.sln, game.fs =
-		res.wallet, res.game.gain or 0, res.game.bet, getbitnum(res.game.sbl), res.game.fs or 0
+		res.wallet, res.game.gain or 0, res.game.bet, getbitnum(res.game.sel), res.game.fs or 0
 	fmt(lt.spin, "[spin] gid: %d, sid: %d, fs: %d, wallet: %.7g, gain: %.7g",
 		game.gid, res.sid, game.fs, wallet, game.gain)
 	spincount = spincount + 1
@@ -228,7 +228,7 @@ while os.clock () < jobtime do
 	-- change selected bet lines sometimes
 	if game.changesbl and game.fs == 0 and random() < 1/50 then
 		game.sln = random(3, 10)
-		checkres(slotsblset, usrtoken, game.gid, makebitnum(game.sln))
+		checkres(slotselset, usrtoken, game.gid, makebitnum(game.sln))
 		fmt(lt.gset, "[sblset] gid: %d, sln: %d", game.gid, game.sln)
 		sleep(speed*600) -- after bet lines
 	end
@@ -260,7 +260,7 @@ sleep(speed*random(0, 800)) -- pause before parts
 for _, v in pairs(gameset) do
 	game = v
 	-- part game
-	checkres(slotpart, usrtoken, game.gid)
+	checkres(gamepart, usrtoken, game.gid)
 	fmt(lt.gset, "[part] cid: %d, uid: %d, gid: %d", cid, uid, game.gid)
 	sleep(speed*100)
 end
