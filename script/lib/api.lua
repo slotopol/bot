@@ -25,6 +25,27 @@ function makebitnum(num)
 	return lshift(lshift(1, num) - 1, 1)
 end
 
+function shuffle(n, f)
+	for i = n, 1, -1 do
+		f(i, math.random(i))
+	end
+end
+
+function kenospots(n)
+	local t = {}
+	for i = 1, 80 do
+		t[i] = i
+	end
+	shuffle(80, function(i, j)
+		t[i], t[j] = t[j], t[i]
+	end)
+	local ret = {}
+	for i = 1, n do
+		ret[i] = t[i]
+	end
+	return ret
+end
+
 local addr = slotopolhost
 
 local function httpget(path, query)
@@ -135,6 +156,14 @@ function slotselset(token, gid, sel)
 	return authpost("/slot/sel/set", token, {gid=gid, sel=sel})
 end
 
+function slotselgetslice(token, gid)
+	return authpost("/slot/sel/getslice", token, {gid=gid})
+end
+
+function slotselsetslice(token, gid, idx)
+	return authpost("/slot/sel/setslice", token, {gid=gid, sel=idx})
+end
+
 function slotspin(token, gid)
 	return authpost("/slot/spin", token, {gid=gid})
 end
@@ -145,6 +174,34 @@ end
 
 function slotcollect(token, gid)
 	return authpost("/slot/collect", token, {gid=gid})
+end
+
+function kenobetget(token, gid)
+	return authpost("/keno/bet/get", token, {gid=gid})
+end
+
+function kenobetset(token, gid, bet)
+	return authpost("/keno/bet/set", token, {gid=gid, bet=bet})
+end
+
+function kenoselget(token, gid)
+	return authpost("/keno/sel/get", token, {gid=gid})
+end
+
+function kenoselset(token, gid, sel)
+	return authpost("/keno/sel/set", token, {gid=gid, sel=sel})
+end
+
+function kenoselgetslice(token, gid)
+	return authpost("/keno/sel/getslice", token, {gid=gid})
+end
+
+function kenoselsetslice(token, gid, idx)
+	return authpost("/keno/sel/setslice", token, {gid=gid, sel=idx})
+end
+
+function kenospin(token, gid)
+	return authpost("/keno/spin", token, {gid=gid})
 end
 
 function propwalletget(token, cid, uid)

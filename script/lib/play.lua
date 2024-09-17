@@ -148,26 +148,37 @@ for _, v in pairs(gameset) do
 	fmt(lt.gset, "[join] cid: %d, uid: %d, gid: %d, alias: %s", cid, uid, game.gid, game.alias)
 	sleep(speed*random(300, 600)) -- after game join
 
-	-- change bet value before spins
-	checkres(slotbetset, usrtoken, game.gid, game.bet)
-	fmt(lt.gset, "[betset] gid: %d, bet: %.7g", game.gid, game.bet)
-	sleep(speed*400) -- after bet value
-	-- change bet lines before spins
-	if game.sln > 0 then
-		checkres(slotselset, usrtoken, game.gid, makebitnum(game.sln))
-		fmt(lt.gset, "[sblset] gid: %d, sln: %d", game.gid, game.sln)
-		sleep(speed*400) -- after bet lines
+	if game.class == "slot" then
+		-- change bet value before spins
+		checkres(slotbetset, usrtoken, game.gid, game.bet)
+		fmt(lt.gset, "[betset] gid: %d, bet: %.7g", game.gid, game.bet)
+		sleep(speed*400) -- after bet value
+		-- change bet lines before spins
+		if game.sln > 0 then
+			checkres(slotselset, usrtoken, game.gid, makebitnum(game.sln))
+			fmt(lt.gset, "[selset] gid: %d, sln: %d", game.gid, game.sln)
+			sleep(speed*400) -- after bet lines
+		else
+			game.sln = getbitnum(checkres(slotselget, usrtoken, game.gid).sel)
+		end
+	elseif game.class == "keno" then
+		-- change bet value before spins
+		checkres(kenobetset, usrtoken, game.gid, game.bet)
+		fmt(lt.gset, "[betset] gid: %d, bet: %.7g", game.gid, game.bet)
+		sleep(speed*400) -- after bet value
+		-- change selected spots before spins
+		checkres(kenoselsetslice, usrtoken, game.gid, kenospots(game.ssn))
+		fmt(lt.gset, "[selset] gid: %d, ssn: %d", game.gid, game.ssn)
+		sleep(speed*400) -- after spots
 	else
-		game.sln = getbitnum(checkres(slotselget, usrtoken, game.gid).sel)
+		fmt(lt.warn, "uid: %d, alias is %s, game class not recognized", uid, game.alias)
+		os.exit(1)
 	end
 end
 
 sleep(speed*random(0, 800)) -- pause before spins
 
--- make some spins in the loop
-while os.clock () < jobtime do
-	game = gameset[random(#gameset)]
-
+local function slotloop()
 	-- check money at wallet
 	if wallet < game.bet*game.sln then
 		local sum
@@ -183,9 +194,6 @@ while os.clock () < jobtime do
 	-- make spin
 	sleep(speed*random(1200, 1400)) -- reels rotation timeout
 	res = checkbody(slotspin, usrtoken, game.gid)
-	if not res then
-		break
-	end
 	wallet, game.gain, game.bet, game.sln, game.fs =
 		res.wallet, res.game.gain or 0, res.game.bet, getbitnum(res.game.sel), res.game.fs or 0
 	fmt(lt.spin, "[spin] gid: %d, sid: %d, fs: %d, wallet: %.7g, gain: %.7g",
@@ -229,8 +237,62 @@ while os.clock () < jobtime do
 	if game.changesbl and game.fs == 0 and random() < 1/50 then
 		game.sln = random(3, 10)
 		checkres(slotselset, usrtoken, game.gid, makebitnum(game.sln))
-		fmt(lt.gset, "[sblset] gid: %d, sln: %d", game.gid, game.sln)
+		fmt(lt.gset, "[selset] gid: %d, sln: %d", game.gid, game.sln)
 		sleep(speed*600) -- after bet lines
+	end
+end
+
+local function kenoloop()
+	-- check money at wallet
+	if wallet < game.bet then
+		local sum
+		repeat
+			sum = sumset[random(#sumset)]
+		until wallet + sum >= game.bet
+		wallet = checkbody(propwalletadd, admtoken, cid, uid, sum).wallet
+		fmt(lt.cash, "[walletadd] cid: %d, uid: %d, bet: %.7g, ssn: %d, wallet: %.7g, sum: %.7g",
+			cid, uid, game.bet, game.ssn, wallet, sum)
+		sleep(speed*random(2000, 5000))
+	end
+
+	-- make spin
+	sleep(speed*random(1200, 1400)) -- reels rotation timeout
+	res = checkbody(kenospin, usrtoken, game.gid)
+	wallet, game.gain = res.wallet, res.wins.pay
+	fmt(lt.spin, "[spin] gid: %d, sid: %d, ssn: %d, wallet: %.7g, num: %d, pay: %.7g",
+		game.gid, res.sid, game.ssn, wallet, res.wins.num, res.wins.pay)
+	spincount = spincount + 1
+	if res.wins.pay > 100*game.bet then
+		fmt(lt.spec, "big win!")
+		sleep(speed*1200) -- big win
+	else
+		sleep(speed*100*random(4, 6)) -- normal win
+	end
+
+	-- change bet value sometimes
+	if random() < 1/50 then
+		game.bet = betset[random(#betset)]
+		checkres(kenobetset, usrtoken, game.gid, game.bet)
+		fmt(lt.gset, "[betset] gid: %d, bet: %.7g", game.gid, game.bet)
+		sleep(speed*600) -- after bet value
+	end
+
+	-- change selected spots sometimes
+	if random() < 1/50 then
+		game.ssn = random(2, 10)
+		checkres(kenoselsetslice, usrtoken, game.gid, kenospots(game.ssn))
+		fmt(lt.gset, "[selset] gid: %d, ssn: %d", game.gid, game.ssn)
+		sleep(speed*600) -- after bet lines
+	end
+end
+
+-- make some spins in the loop
+while os.clock () < jobtime do
+	game = gameset[random(#gameset)]
+	if game.class == "slot" then
+		slotloop()
+	elseif game.class == "keno" then
+		kenoloop()
 	end
 
 	-- pause sometimes

@@ -8,12 +8,14 @@ globals = {
 	"signctx", "admtoken",
 	"lt", "slotopolhost", "cid", "email", "secret", "name", "jobtime", "speed", "gameset",
 	-- functions
-	"getbitnum", "makebitnum",
+	"getbitnum", "makebitnum", "shuffle", "kenospots",
 	"servinfo", "memusage", "gamelist",
 	"signis", "signup", "admsignup", "signin", "refresh",
-	"gamejoin", "gamepart", "gameinfo",
-	"slotbetget", "slotbetset", "slotselget", "slotselset", "gamertpget",
-	"slotspin", "slotdoubleup", "slotcollect",
+	"gamejoin", "gamepart", "gameinfo", "gamertpget",
+	"slotbetget", "slotbetset", "slotselget", "slotselset",
+	"slotselgetslice", "slotselsetslice", "slotspin", "slotdoubleup", "slotcollect",
+	"kenobetget", "kenobetset", "kenoselget", "kenoselset",
+	"kenoselgetslice", "kenoselsetslice", "kenospin",
 	"propwalletget", "propwalletadd", "propaccessget", "propaccessset", "proprtpget", "proprtpset",
 }
 

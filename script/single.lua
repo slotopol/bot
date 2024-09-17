@@ -44,5 +44,5 @@ admtoken = admin.access
 fmt("signed in admin account with uid=%d, token expires: %s", admin.uid, admin.expire)
 
 -- execute single thread
-fmt("start %d games", n)
+fmt("start %d games", #gameset)
 dofile(scrdir.."/lib/play.lua")
