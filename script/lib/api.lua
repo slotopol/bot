@@ -165,6 +165,7 @@ function slotselsetslice(token, gid, idx)
 end
 
 function slotspin(token, gid)
+	atom.intinc"spin"
 	return authpost("/slot/spin", token, {gid=gid})
 end
 
@@ -201,6 +202,7 @@ function kenoselsetslice(token, gid, idx)
 end
 
 function kenospin(token, gid)
+	atom.intinc"spin"
 	return authpost("/keno/spin", token, {gid=gid})
 end
 
@@ -209,6 +211,8 @@ function propwalletget(token, cid, uid)
 end
 
 function propwalletadd(token, cid, uid, sum)
+	atom.intinc"topup"
+	atom.numadd("topup", sum)
 	return authpost("/prop/wallet/add", token, {cid=cid, uid=uid, sum=sum})
 end
 

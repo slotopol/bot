@@ -113,6 +113,43 @@ func luatime2milli(ls *lua.LState) int {
 	return 1
 }
 
+func luasec2dur(ls *lua.LState) int {
+	var sec = float64(ls.CheckNumber(1))
+	var gran = float64(ls.OptNumber(2, 1))
+
+	var dur = time.Duration(sec * float64(time.Second))
+	var dg = time.Duration(gran * float64(time.Second))
+	dur = dur.Round(dg)
+	ls.Push(lua.LString(dur.String()))
+	return 1
+}
+
+func luaafter(ls *lua.LState) int {
+	var milli = ls.CheckInt64(1)
+	var ch = ls.CheckChannel(2)
+
+	go func() {
+		<-time.After(time.Duration(milli) * time.Millisecond)
+		<-ch
+	}()
+	return 0
+}
+
+func luatick(ls *lua.LState) int {
+	var milli = ls.CheckInt64(1)
+	var ch = ls.CheckChannel(2)
+
+	go func() {
+		var c = time.Tick(time.Duration(milli) * time.Millisecond)
+		for range c {
+			if _, ok := <-ch; !ok {
+				break
+			}
+		}
+	}()
+	return 0
+}
+
 func luasleep(ls *lua.LState) int {
 	var err error
 	defer func() {
@@ -189,9 +226,10 @@ func luathread(ls *lua.LState) int {
 		}
 	}
 
-	var tls = MakeLuaVM() // thread Lua state
+	var tls = lua.NewState() // thread Lua state
 	go func() {
 		defer tls.Close()
+		InitLuaVM(tls)
 
 		for key, val := range args {
 			tls.SetGlobal(key, val)
@@ -239,12 +277,11 @@ func WaitQuit() {
 	signal.Stop(sigterm)
 }
 
-// MakeLuaVM creates Lua state and performs initial registrations.
-func MakeLuaVM() *lua.LState {
-	var ls = lua.NewState()
-
-	// preload modules
-	ls.PreloadModule("path", LoadPath)
+// InitLuaVM performs initial registrations.
+func InitLuaVM(ls *lua.LState) {
+	// set modules
+	RegPath(ls)
+	RegAtom(ls)
 	ls.PreloadModule("http", gluahttp.NewHttpModule(&http.Client{}).Loader)
 	ls.PreloadModule("json", json.Loader)
 	ls.PreloadModule("crypto", crypto.Loader)
@@ -270,16 +307,18 @@ func MakeLuaVM() *lua.LState {
 	ls.SetGlobal("hex2bin", ls.NewFunction(luahex2bin))
 	ls.SetGlobal("milli2time", ls.NewFunction(luamilli2time))
 	ls.SetGlobal("time2milli", ls.NewFunction(luatime2milli))
+	ls.SetGlobal("sec2dur", ls.NewFunction(luasec2dur))
+	ls.SetGlobal("after", ls.NewFunction(luaafter))
+	ls.SetGlobal("tick", ls.NewFunction(luatick))
 	ls.SetGlobal("sleep", ls.NewFunction(luasleep))
 	ls.SetGlobal("thread", ls.NewFunction(luathread))
-
-	return ls
 }
 
 // RunLuaVM runs specified Lua-script with Lua Bot API.
 func RunLuaVM(fpath string) (err error) {
-	var ls = MakeLuaVM()
+	var ls = lua.NewState()
 	defer ls.Close()
+	InitLuaVM(ls)
 
 	var scrdir = path.Dir(util.ToSlash(fpath))
 	ls.SetGlobal("scrdir", lua.LString(scrdir))

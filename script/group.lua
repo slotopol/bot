@@ -32,8 +32,8 @@ local options = { -- shared options for each player
 	lt = {
 		warn = true,
 		info = true,
-		sign = true,
-		cash = true,
+		sign = false,
+		cash = false,
 		gset = false,
 		spin = false,
 		spec = false,
@@ -93,20 +93,43 @@ for i = 1, usrnum do
 	signctx:receive()
 end
 signctx:close()
+fmt("signed in all %d users", usrnum)
 
 -- wait until all threads complete
-for _ = 1, usrnum do
-	local ok, err = exit:receive()
-	if not ok then
-		fmt("unexpected channel closure")
-		return
-	end
-	if err then
-		fmt(err)
-		exit:close()
-		return
-	end
-end
+local ud = 0
+local stat = channel.make()
+tick(5000, stat)
+repeat
+	local done = false
+	channel.select(
+		{"|<-", exit, function(ok, err)
+			if not ok then
+				fmt("unexpected channel closure")
+				done = true
+				return
+			end
+			if err then
+				fmt(err)
+				exit:close()
+				done = true
+				return
+			end
+			ud = ud + 1
+			if ud >= usrnum then
+				done = true
+				return
+			end
+		end},
+		{"<-|", stat, nil, function()
+			fmt("%d spins done, %d tops up on sum %g, elapsed %s",
+				atom.intget"spin", atom.intget"topup", atom.numget"topup", sec2dur(os.clock()))
+		end},
+		{"default", function()
+		end}
+	)
+until done
+stat:close()
 
-fmt("all %d threads complete.", usrnum)
+fmt("all %d threads complete, %d spins done, %d tops up on sum %g, elapsed %s.",
+	usrnum, atom.intget"spin", atom.intget"topup", atom.numget"topup", sec2dur(os.clock()))
 exit:close()

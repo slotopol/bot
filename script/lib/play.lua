@@ -298,7 +298,7 @@ while os.clock () < jobtime do
 	-- pause sometimes
 	if game.fs == 0 and random() < 1/100 then
 		local d = random(3, 15)
-		fmt(lt.info, "uid: %d, let's pause %d seconds", uid, d)
+		fmt(lt.gset, "uid: %d, let's pause %d seconds", uid, d)
 		sleep(speed*d*1000)
 	end
 
@@ -306,7 +306,7 @@ while os.clock () < jobtime do
 	local exit = false
 	channel.select(
 		{"|<-", quit, function()
-			fmt(lt.info, "uid: %d, quit by break", uid)
+			fmt(lt.gset, "uid: %d, quit by break", uid)
 			exit = true
 		end},
 		{"default", function()

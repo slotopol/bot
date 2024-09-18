@@ -9,13 +9,10 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-// LoadPath is the module loader function.
-func LoadPath(ls *lua.LState) int {
-	mod := ls.NewTable()
-	ls.SetFuncs(mod, pathfuncs)
+// RegPath is the module loader function.
+func RegPath(ls *lua.LState) {
+	var mod = ls.RegisterModule("path", pathfuncs).(*lua.LTable)
 	mod.RawSetString("sep", lua.LString("/"))
-	ls.Push(mod)
-	return 1
 }
 
 var pathfuncs = map[string]lua.LGFunction{

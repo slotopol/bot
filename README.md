@@ -65,5 +65,9 @@ To start group of players emulation run followed script:
 bot_win_x64 script/group.lua
 ```
 
+In this script you can change the value of `usrnum` to determine how many players online your configuration can keep. `jobtime` defines the testing time.
+
+During the testing each user starts randomly from 1 to 15 games, and makes a spin each 1.3 seconds (this emulates playing at several browser tabs). If spin have a win, its waits supposed win animation, and randomly starts double-up bonus game. Average every 50 spins user randomly can change bet value or selected bet lines at last spin game. Sometimes he pause randomly 3..15 seconds. If the money runs out, the admin tops up his balance with a random amount.
+
 ---
 (c) schwarzlichtbezirk, 2024.

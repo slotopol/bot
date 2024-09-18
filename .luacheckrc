@@ -20,12 +20,14 @@ globals = {
 }
 
 read_globals = {
+	-- modules
+	"path", "atom",
 	-- variables
 	"quit",
 	"buildvers", "buildtime", "bindir", "scrdir", "tmpdir",
 	-- functions
-	"log", "checkfile", "bin2hex", "hex2bin", "milli2time", "time2milli",
-	"sleep", "thread",
+	"log", "checkfile", "bin2hex", "hex2bin", "milli2time", "time2milli", "sec2dur",
+	"after", "tick", "sleep", "thread",
 }
 
 std = { -- Lua 5.1 & GopherLua

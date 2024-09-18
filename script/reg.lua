@@ -77,4 +77,4 @@ for _, user in ipairs(users) do
 		fmt("#%d (%s): exist", uid, user.email)
 	end
 end
-fmt("total %d accounts, created %d accounts, job complete.", usrnum, n)
+fmt("total %d accounts, created %d accounts, elapsed %s, job complete.", usrnum, n, sec2dur(os.clock()))
