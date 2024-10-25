@@ -1,30 +1,5 @@
 
--- define some functions for bot workflow
-local function fmt(...) -- write to log formatted string
-	print(string.format(...))
-end
-
-fmt("bot version: %s, builton: %s", buildvers, buildtime)
-fmt("binary dir: %s", bindir)
-fmt("script dir: %s", scrdir)
-fmt("temporary dir: %s", tmpdir)
-
-local charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" -- base62 charset
-
-math.randomseed(27) -- produce equal sequences of passwords on each run
-
-local function makepass(n)
-	local t = {}
-	for i = 1, n do
-		local p = math.random(#charset)
-		t[i] = string.sub(charset, p, p)
-	end
-	return table.concat(t)
-end
-
--- load games set
-local games, gamenum = dofile(scrdir.."/lib/games.lua")
-
+----- input data begin -----
 local exit = channel.make()
 local signctx = channel.make() -- signin context
 local usrnum = 500 -- number of players to run
@@ -44,6 +19,33 @@ local options = { -- shared options for each player
 	speed = 1, -- make it less than 1 to run faster
 	signctx = signctx,
 }
+slotopolhost = "http://localhost:8080"
+----- input data final -----
+
+local function printf(...) -- write to log formatted string
+	print(string.format(...))
+end
+
+printf("bot version: %s, builton: %s", buildvers, buildtime)
+printf("binary dir: %s", bindir)
+printf("script dir: %s", scrdir)
+printf("temporary dir: %s", tmpdir)
+
+local charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" -- base62 charset
+
+math.randomseed(27) -- produce equal sequences of passwords on each run
+
+local function makepass(n)
+	local t = {}
+	for i = 1, n do
+		local p = math.random(#charset)
+		t[i] = string.sub(charset, p, p)
+	end
+	return table.concat(t)
+end
+
+-- load games set
+local games, gamenum = dofile(scrdir.."/lib/games.lua")
 
 -- prepare users table before anything to keep passwords sequences
 local users = {}
@@ -55,19 +57,17 @@ for i = 1, usrnum do
 	}
 end
 
-slotopolhost = "http://localhost:8080"
-
 -- load API-calls
 dofile(scrdir.."/lib/api.lua")
 
 -- login admin to add money to wallet
 local admin, status = signin("admin@example.org", "0YBoaT")
 if status >= 400 then
-	fmt("can not login admin account, status: %d, code: %d, message: %s", status, admin.code, admin.what)
+	printf("can not login admin account, status: %d, code: %d, message: %s", status, admin.code, admin.what)
 	return
 end
 options.admtoken = admin.access
-fmt("signed in admin account with uid=%d, token expires: %s", admin.uid, admin.expire)
+printf("signed in admin account with uid=%d, token expires: %s", admin.uid, admin.expire)
 
 local function tcopy(src)
 	local dst = {}
@@ -93,7 +93,7 @@ for i = 1, usrnum do
 	signctx:receive()
 end
 signctx:close()
-fmt("signed in all %d users", usrnum)
+printf("signed in all %d users", usrnum)
 
 -- wait until all threads complete
 local ud = 0
@@ -104,12 +104,12 @@ repeat
 	channel.select(
 		{"|<-", exit, function(ok, err)
 			if not ok then
-				fmt("unexpected channel closure")
+				printf("unexpected channel closure")
 				done = true
 				return
 			end
 			if err then
-				fmt(err)
+				printf(err)
 				exit:close()
 				done = true
 				return
@@ -121,8 +121,8 @@ repeat
 			end
 		end},
 		{"<-|", stat, nil, function()
-			fmt("%d spins done, %d tops up on sum %g, elapsed %s",
-				atom.intget"spin", atom.intget"topup", atom.numget"topup", sec2dur(os.clock()))
+			printf("%d backlog fails, %d spins done, %d tops up on sum %g, elapsed %s",
+				atom.intget"backlog", atom.intget"spin", atom.intget"topup", atom.numget"topup", sec2dur(os.clock()))
 		end},
 		{"default", function()
 		end}
@@ -130,6 +130,6 @@ repeat
 until done
 stat:close()
 
-fmt("all %d threads complete, %d spins done, %d tops up on sum %g, elapsed %s.",
-	usrnum, atom.intget"spin", atom.intget"topup", atom.numget"topup", sec2dur(os.clock()))
+printf("all %d threads complete, %d backlog fails, %d spins done, %d tops up on sum %g, elapsed %s.",
+	usrnum, atom.intget"backlog", atom.intget"spin", atom.intget"topup", atom.numget"topup", sec2dur(os.clock()))
 exit:close()

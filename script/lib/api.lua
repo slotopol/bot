@@ -156,14 +156,6 @@ function slotselset(token, gid, sel)
 	return authpost("/slot/sel/set", token, {gid=gid, sel=sel})
 end
 
-function slotselgetslice(token, gid)
-	return authpost("/slot/sel/getslice", token, {gid=gid})
-end
-
-function slotselsetslice(token, gid, idx)
-	return authpost("/slot/sel/setslice", token, {gid=gid, sel=idx})
-end
-
 function slotspin(token, gid)
 	atom.intinc"spin"
 	return authpost("/slot/spin", token, {gid=gid})

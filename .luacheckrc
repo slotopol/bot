@@ -13,7 +13,7 @@ globals = {
 	"signis", "signup", "admsignup", "signin", "refresh",
 	"gamejoin", "gamepart", "gameinfo", "gamertpget",
 	"slotbetget", "slotbetset", "slotselget", "slotselset",
-	"slotselgetslice", "slotselsetslice", "slotspin", "slotdoubleup", "slotcollect",
+	"slotspin", "slotdoubleup", "slotcollect",
 	"kenobetget", "kenobetset", "kenoselget", "kenoselset",
 	"kenoselgetslice", "kenoselsetslice", "kenospin",
 	"propwalletget", "propwalletadd", "propaccessget", "propaccessset", "proprtpget", "proprtpset",

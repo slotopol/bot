@@ -1,5 +1,4 @@
 
--- define some functions for bot workflow
 local function fmt(show, ...) -- write to log formatted string
 	if show then
 		print(string.format(...))
@@ -80,7 +79,8 @@ local function checkres(f, ...)
 		ok, res, status = pcall(f, ...)
 		if not ok then
 			if res:match(backlog) then
-				sleep(0)
+				atom.intint"backlog"
+				sleep(10)
 			else
 				error(res) -- throw it again
 			end
@@ -155,11 +155,11 @@ for _, v in pairs(gameset) do
 		sleep(speed*400) -- after bet value
 		-- change bet lines before spins
 		if game.sln > 0 then
-			checkres(slotselset, usrtoken, game.gid, makebitnum(game.sln))
+			checkres(slotselset, usrtoken, game.gid, game.sln)
 			fmt(lt.gset, "[selset] gid: %d, sln: %d", game.gid, game.sln)
 			sleep(speed*400) -- after bet lines
 		else
-			game.sln = getbitnum(checkres(slotselget, usrtoken, game.gid).sel)
+			game.sln = checkres(slotselget, usrtoken, game.gid).sel
 		end
 	elseif game.class == "keno" then
 		-- change bet value before spins
@@ -195,7 +195,7 @@ local function slotloop()
 	sleep(speed*random(1200, 1400)) -- reels rotation timeout
 	res = checkbody(slotspin, usrtoken, game.gid)
 	wallet, game.gain, game.bet, game.sln, game.fs =
-		res.wallet, res.game.gain or 0, res.game.bet, getbitnum(res.game.sel), res.game.fs or 0
+		res.wallet, res.game.gain or 0, res.game.bet, res.game.sel, res.game.fs or 0
 	fmt(lt.spin, "[spin] gid: %d, sid: %d, fs: %d, wallet: %.7g, gain: %.7g",
 		game.gid, res.sid, game.fs, wallet, game.gain)
 	spincount = spincount + 1
@@ -236,7 +236,7 @@ local function slotloop()
 	-- change selected bet lines sometimes
 	if game.changesbl and game.fs == 0 and random() < 1/50 then
 		game.sln = random(3, 10)
-		checkres(slotselset, usrtoken, game.gid, makebitnum(game.sln))
+		checkres(slotselset, usrtoken, game.gid, game.sln)
 		fmt(lt.gset, "[selset] gid: %d, sln: %d", game.gid, game.sln)
 		sleep(speed*600) -- after bet lines
 	end

@@ -1,6 +1,6 @@
 module github.com/slotopol/bot
 
-go 1.22
+go 1.23
 
 require (
 	github.com/cjoudrey/gluahttp v0.0.0-20201111170219-25003d9adfa9

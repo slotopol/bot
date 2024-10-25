@@ -1,13 +1,17 @@
 
--- define some functions for bot workflow
-local function fmt(...) -- write to log formatted string
+----- input data begin -----
+local usrnum = 5000 -- number of players to run
+slotopolhost = "http://localhost:8080"
+----- input data final -----
+
+local function printf(...) -- write to log formatted string
 	print(string.format(...))
 end
 
-fmt("bot version: %s, builton: %s", buildvers, buildtime)
-fmt("binary dir: %s", bindir)
-fmt("script dir: %s", scrdir)
-fmt("temporary dir: %s", tmpdir)
+printf("bot version: %s, builton: %s", buildvers, buildtime)
+printf("binary dir: %s", bindir)
+printf("script dir: %s", scrdir)
+printf("temporary dir: %s", tmpdir)
 
 local charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" -- base62 charset
 
@@ -43,8 +47,6 @@ local function checkbody(f, ...)
 	return res
 end
 
-local usrnum = 5000 -- number of players to run
-
 -- prepare users table before anything to keep passwords sequences
 local users = {}
 for i = 1, usrnum do
@@ -55,15 +57,13 @@ for i = 1, usrnum do
 	}
 end
 
-slotopolhost = "http://localhost:8080"
-
 -- load API-calls
 dofile(scrdir.."/lib/api.lua")
 
 -- login admin to add money to wallet
 local admin = checkbody(signin, "admin@example.org", "0YBoaT")
 local admtoken = admin.access
-fmt("signed in admin account with uid=%d, token expires: %s", admin.uid, admin.expire)
+printf("signed in admin account with uid=%d, token expires: %s", admin.uid, admin.expire)
 
 -- generate players
 local n = 0
@@ -71,10 +71,10 @@ for _, user in ipairs(users) do
 	local uid = checkbody(signis, user.email).uid
 	if uid == 0 then
 		uid = checkbody(admsignup, admtoken, user.email, user.secret, user.name).uid
-		fmt("#%d (%s): registered", uid, user.email)
+		printf("#%d (%s): registered", uid, user.email)
 		n = n + 1
 	else
-		fmt("#%d (%s): exist", uid, user.email)
+		printf("#%d (%s): exist", uid, user.email)
 	end
 end
-fmt("total %d accounts, created %d accounts, elapsed %s, job complete.", usrnum, n, sec2dur(os.clock()))
+printf("total %d accounts, created %d accounts, elapsed %s, job complete.", usrnum, n, sec2dur(os.clock()))
