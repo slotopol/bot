@@ -36,8 +36,9 @@ end
 if not gameset then
 	gameset = {
 		{
+			class = "slot",
+			alias = "novomatic/dolphinspearl",
 			gid = 0,
-			alias = "dolphinspearl",
 			changesbl = true,
 			bet = 1, sln = 5,
 			fs = 0, gain = 0,

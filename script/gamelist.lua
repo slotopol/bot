@@ -16,11 +16,11 @@ if status >= 400 then
 	return
 end
 
-local list, prov, num, alg = {}, {}, 0, 0
+local list, num, prov, alg = {}, 0, {}, 0
 for _, gi in ipairs(gl) do
-	prov[gi.provider] = (prov[gi.provider] or 0) + #gi.aliases
 	alg = alg + 1
 	for _, ga in ipairs(gi.aliases) do
+		prov[ga.prov] = (prov[ga.prov] or 0) + 1
 		num = num + 1
 		if gi.ln and gi.ln > 100 then
 			list[num] = string.format("'%s' %s %dx%d videoslot, %d ways", ga.name, gi.provider, gi.sx, gi.sy, gi.ln)
@@ -38,13 +38,16 @@ for _, s in ipairs(list) do
 	print(s)
 end
 
+list = {}
 local pn = 0
-for _, _ in pairs(prov) do
+for p, n in pairs(prov) do
 	pn = pn + 1
+	list[pn] = string.format("%s: %d games", p, n)
 end
+table.sort(list)
 
 print ""
 printf("total: %d games, %d algorithms, %d providers", num, alg, pn)
-for p, n in pairs(prov) do
-	printf("%s: %d games", p, n)
+for _, s in ipairs(list) do
+	print(s)
 end

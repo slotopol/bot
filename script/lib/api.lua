@@ -198,6 +198,10 @@ function kenospin(token, gid)
 	return authpost("/keno/spin", token, {gid=gid})
 end
 
+function propget(token, cid, uid)
+	return authpost("/prop/get", token, {cid=cid, uid=uid})
+end
+
 function propwalletget(token, cid, uid)
 	return authpost("/prop/wallet/get", token, {cid=cid, uid=uid})
 end

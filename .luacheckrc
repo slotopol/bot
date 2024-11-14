@@ -16,7 +16,7 @@ globals = {
 	"slotspin", "slotdoubleup", "slotcollect",
 	"kenobetget", "kenobetset", "kenoselget", "kenoselset",
 	"kenoselgetslice", "kenoselsetslice", "kenospin",
-	"propwalletget", "propwalletadd", "propaccessget", "propaccessset", "proprtpget", "proprtpset",
+	"propget", "propwalletget", "propwalletadd", "propaccessget", "propaccessset", "proprtpget", "proprtpset",
 }
 
 read_globals = {
