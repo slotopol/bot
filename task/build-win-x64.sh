@@ -2,6 +2,7 @@
 # This script compiles project for Windows amd64.
 
 wd=$(realpath -s "$(dirname "$0")/..")
+mkdir -p "$GOPATH/bin/script"
 cp -ruv "$wd/script/"* "$GOPATH/bin/script"
 
 buildvers=$(git describe --tags)

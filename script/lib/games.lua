@@ -6,7 +6,7 @@ local games = {
 		gid = 0,
 		changesbl = true,
 		bet = 1, sln = 5,
-		fs = 0, gain = 0,
+		fsr = 0, gain = 0,
 	},
 	{ -- 2
 		class = "slot",
@@ -14,7 +14,7 @@ local games = {
 		gid = 0,
 		changesbl = true,
 		bet = 1, sln = 9,
-		fs = 0, gain = 0,
+		fsr = 0, gain = 0,
 	},
 	{ -- 3
 		class = "slot",
@@ -22,7 +22,7 @@ local games = {
 		gid = 0,
 		changesbl = true,
 		bet = 5, sln = 5,
-		fs = 0, gain = 0,
+		fsr = 0, gain = 0,
 	},
 	{ -- 4
 		class = "slot",
@@ -30,7 +30,7 @@ local games = {
 		gid = 0,
 		changesbl = false,
 		bet = 1, sln = 0,
-		fs = 0, gain = 0,
+		fsr = 0, gain = 0,
 	},
 	{ -- 5
 		class = "slot",
@@ -38,7 +38,7 @@ local games = {
 		gid = 0,
 		changesbl = true,
 		bet = 0.2, sln = 21,
-		fs = 0, gain = 0,
+		fsr = 0, gain = 0,
 	},
 	{ -- 6
 		class = "slot",
@@ -46,7 +46,7 @@ local games = {
 		gid = 0,
 		changesbl = false,
 		bet = 0.5, sln = 9,
-		fs = 0, gain = 0,
+		fsr = 0, gain = 0,
 	},
 	{ -- 7
 		class = "slot",
@@ -54,7 +54,7 @@ local games = {
 		gid = 0,
 		changesbl = true,
 		bet = 1, sln = 0,
-		fs = 0, gain = 0,
+		fsr = 0, gain = 0,
 	},
 	{ -- 8
 		class = "slot",
@@ -62,7 +62,7 @@ local games = {
 		gid = 0,
 		changesbl = false,
 		bet = 5, sln = 0,
-		fs = 0, gain = 0,
+		fsr = 0, gain = 0,
 	},
 	{ -- 9
 		class = "slot",
@@ -70,7 +70,7 @@ local games = {
 		gid = 0,
 		changesbl = true,
 		bet = 1, sln = 0,
-		fs = 0, gain = 0,
+		fsr = 0, gain = 0,
 	},
 	{ -- 10
 		class = "keno",
@@ -84,7 +84,7 @@ local games = {
 		gid = 0,
 		changesbl = true,
 		bet = 1, sln = 10,
-		fs = 0, gain = 0,
+		fsr = 0, gain = 0,
 	},
 	{ -- 12
 		class = "slot",
@@ -92,7 +92,7 @@ local games = {
 		gid = 0,
 		changesbl = false,
 		bet = 2, sln = 0,
-		fs = 0, gain = 0,
+		fsr = 0, gain = 0,
 	},
 	{ -- 13
 		class = "slot",
@@ -100,7 +100,7 @@ local games = {
 		gid = 0,
 		changesbl = true,
 		bet = 1, sln = 5,
-		fs = 0, gain = 0,
+		fsr = 0, gain = 0,
 	},
 	{ -- 14
 		class = "slot",
@@ -108,7 +108,7 @@ local games = {
 		gid = 0,
 		changesbl = true,
 		bet = 10, sln = 3,
-		fs = 0, gain = 0,
+		fsr = 0, gain = 0,
 	},
 	{ -- 15
 		class = "slot",
@@ -116,7 +116,7 @@ local games = {
 		gid = 0,
 		changesbl = true,
 		bet = 1, sln = 0,
-		fs = 0, gain = 0,
+		fsr = 0, gain = 0,
 	},
 }
 local gamenum = {1, 1, 1, 1, 1, 2, 2, 3, 4, 5, 10, 15}

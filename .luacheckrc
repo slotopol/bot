@@ -11,7 +11,7 @@ globals = {
 	"getbitnum", "makebitnum", "shuffle", "kenospots",
 	"servinfo", "memusage", "gamelist",
 	"signis", "signup", "admsignup", "signin", "refresh",
-	"gamejoin", "gamepart", "gameinfo", "gamertpget",
+	"gamenew", "gamejoin", "gameinfo", "gamertpget",
 	"slotbetget", "slotbetset", "slotselget", "slotselset",
 	"slotspin", "slotdoubleup", "slotcollect",
 	"kenobetget", "kenobetset", "kenoselget", "kenoselset",

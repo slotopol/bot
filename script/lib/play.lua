@@ -41,7 +41,7 @@ if not gameset then
 			gid = 0,
 			changesbl = true,
 			bet = 1, sln = 5,
-			fs = 0, gain = 0,
+			fsr = 0, gain = 0,
 		},
 	}
 end
@@ -143,11 +143,11 @@ sleep(speed*random(400, 600)) -- after login
 
 for _, v in pairs(gameset) do
 	game = v
-	-- join game
-	res = checkbody(gamejoin, usrtoken, cid, uid, game.alias)
+	-- create game
+	res = checkbody(gamenew, usrtoken, cid, uid, game.alias)
 	game.gid, wallet = res.gid, res.wallet
-	fmt(lt.gset, "[join] cid: %d, uid: %d, gid: %d, alias: %s", cid, uid, game.gid, game.alias)
-	sleep(speed*random(300, 600)) -- after game join
+	fmt(lt.gset, "[new] cid: %d, uid: %d, gid: %d, alias: %s", cid, uid, game.gid, game.alias)
+	sleep(speed*random(300, 600)) -- after game creation
 
 	if game.class == "slot" then
 		-- change bet value before spins
@@ -195,10 +195,10 @@ local function slotloop()
 	-- make spin
 	sleep(speed*random(1200, 1400)) -- reels rotation timeout
 	res = checkbody(slotspin, usrtoken, game.gid)
-	wallet, game.gain, game.bet, game.sln, game.fs =
-		res.wallet, res.game.gain or 0, res.game.bet, res.game.sel, res.game.fs or 0
-	fmt(lt.spin, "[spin] gid: %d, sid: %d, fs: %d, wallet: %.7g, gain: %.7g",
-		game.gid, res.sid, game.fs, wallet, game.gain)
+	wallet, game.gain, game.bet, game.sln, game.fsr =
+		res.wallet, res.game.gain or 0, res.game.bet, res.game.sel, res.game.fsr or 0
+	fmt(lt.spin, "[spin] gid: %d, sid: %d, fsr: %d, wallet: %.7g, gain: %.7g",
+		game.gid, res.sid, game.fsr, wallet, game.gain)
 	spincount = spincount + 1
 	for _, wi in ipairs(res.wins or {}) do
 		fmt(lt.spec, "sym: %dx%d, pay: %.7gx%d", wi.sym, wi.num, wi.pay or 0, wi.mult or 0)
@@ -212,7 +212,7 @@ local function slotloop()
 	end
 
 	-- make doubleup sometimes
-	if game.fs == 0 and game.gain > 0 and random() < 0.25 then
+	if game.fsr == 0 and game.gain > 0 and random() < 0.25 then
 		repeat
 			res = checkbody(slotdoubleup, usrtoken, game.gid, 2)
 			wallet = res.wallet
@@ -227,7 +227,7 @@ local function slotloop()
 	end
 
 	-- change bet value sometimes
-	if game.fs == 0 and random() < 1/50 then
+	if game.fsr == 0 and random() < 1/50 then
 		game.bet = betset[random(#betset)]
 		checkres(slotbetset, usrtoken, game.gid, game.bet)
 		fmt(lt.gset, "[betset] gid: %d, bet: %.7g", game.gid, game.bet)
@@ -235,7 +235,7 @@ local function slotloop()
 	end
 
 	-- change selected bet lines sometimes
-	if game.changesbl and game.fs == 0 and random() < 1/50 then
+	if game.changesbl and game.fsr == 0 and random() < 1/50 then
 		game.sln = random(3, 10)
 		checkres(slotselset, usrtoken, game.gid, game.sln)
 		fmt(lt.gset, "[selset] gid: %d, sln: %d", game.gid, game.sln)
@@ -297,7 +297,7 @@ while os.clock () < jobtime do
 	end
 
 	-- pause sometimes
-	if game.fs == 0 and random() < 1/100 then
+	if game.fsr == 0 and random() < 1/100 then
 		local d = random(3, 15)
 		fmt(lt.gset, "uid: %d, let's pause %d seconds", uid, d)
 		sleep(speed*d*1000)
@@ -316,16 +316,6 @@ while os.clock () < jobtime do
 	if exit then
 		break
 	end
-end
-
-sleep(speed*random(0, 800)) -- pause before parts
-
-for _, v in pairs(gameset) do
-	game = v
-	-- part game
-	checkres(gamepart, usrtoken, game.gid)
-	fmt(lt.gset, "[part] cid: %d, uid: %d, gid: %d", cid, uid, game.gid)
-	sleep(speed*100)
 end
 
 fmt(lt.info, "uid: %d, job complete, %d spins done.", uid, spincount)

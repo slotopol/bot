@@ -124,12 +124,12 @@ function refresh(token)
 	return authpost("/refresh", token, nil)
 end
 
-function gamejoin(token, cid, uid, alias)
-	return authpost("/game/join", token, {cid=cid, uid=uid, alias=alias})
+function gamenew(token, cid, uid, alias)
+	return authpost("/game/new", token, {cid=cid, uid=uid, alias=alias})
 end
 
-function gamepart(token, gid)
-	return authpost("/game/part", token, {gid=gid})
+function gamejoin(token, cid, uid, gid)
+	return authpost("/game/join", token, {cid=cid, uid=uid, gid=gid})
 end
 
 function gameinfo(token, gid)
@@ -212,16 +212,16 @@ function propwalletadd(token, cid, uid, sum)
 	return authpost("/prop/wallet/add", token, {cid=cid, uid=uid, sum=sum})
 end
 
-function propaccessget(token, cid, uid)
-	return authpost("/prop/al/get", token, {cid=cid, uid=uid})
+function propaccessget(token, cid, uid, all)
+	return authpost("/prop/al/get", token, {cid=cid, uid=uid, all=all or false})
 end
 
 function propaccessset(token, cid, uid, al)
 	return authpost("/prop/wallet/add", token, {cid=cid, uid=uid, access=al})
 end
 
-function proprtpget(token, cid, uid)
-	return authpost("/prop/al/get", token, {cid=cid, uid=uid})
+function proprtpget(token, cid, uid, all)
+	return authpost("/prop/al/get", token, {cid=cid, uid=uid, all=all or false})
 end
 
 function proprtpset(token, cid, uid, mrtp)
