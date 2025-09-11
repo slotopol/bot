@@ -98,8 +98,12 @@ function memusage()
 	return httpget("/memusage", nil)
 end
 
+function gamealgs()
+	return httpget("/game/algs", nil)
+end
+
 function gamelist()
-	return httpget("/gamelist", nil)
+	return httpget("/game/list", nil)
 end
 
 function signis(email)

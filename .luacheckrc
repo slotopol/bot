@@ -9,7 +9,7 @@ globals = {
 	"lt", "slotopolhost", "cid", "email", "secret", "name", "jobtime", "speed", "gameset",
 	-- functions
 	"getbitnum", "makebitnum", "shuffle", "kenospots",
-	"servinfo", "memusage", "gamelist",
+	"servinfo", "memusage", "gamealgs", "gamelist",
 	"signis", "signup", "admsignup", "signin", "refresh",
 	"gamenew", "gamejoin", "gameinfo", "gamertpget",
 	"slotbetget", "slotbetset", "slotselget", "slotselset",

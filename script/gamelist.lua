@@ -10,7 +10,7 @@ end
 -- load API-calls
 dofile(scrdir.."/lib/api.lua")
 
-local gl, status = gamelist()
+local gl, status = gamealgs()
 if status >= 400 then
 	printf("failure to get games list, status: %d, code: %d, message: %s", status, gl.code, gl.what)
 	return
