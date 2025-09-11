@@ -9,4 +9,4 @@ for /f "tokens=2 delims==" %%g in ('wmic os get localdatetime /value') do set dt
 set buildtime=%dt:~0,4%-%dt:~4,2%-%dt:~6,2%T%dt:~8,2%:%dt:~10,2%:%dt:~12,2%.%dt:~15,3%Z
 
 go env -w GOOS=windows GOARCH=386 CGO_ENABLED=1
-go build -o %GOPATH%/bin/bot_win_x86.exe -v -ldflags="-X 'main.BuildVers=%buildvers%' -X 'main.BuildTime=%buildtime%'" %wd%
+go build -o %GOPATH%/bin/bot_win_x86.exe -v -buildvcs=false -ldflags="-X 'main.BuildVers=%buildvers%' -X 'main.BuildTime=%buildtime%'" %wd%

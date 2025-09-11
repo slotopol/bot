@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -11,9 +11,14 @@ import (
 func main() {
 	go WaitQuit()
 	for _, fpath := range os.Args[1:] {
-		if util.ToLower(filepath.Ext(fpath)) == ".lua" {
+		if arg := util.ToLower(fpath); arg == "-h" || arg == "--help" || arg == "/?" {
+			fmt.Printf("version: %s, builton: %s\n", BuildVers, BuildTime)
+			fmt.Println("usage: bot [script.lua ...]")
+			fmt.Println("  -h, --help, /?    show this help message")
+			fmt.Println("  script.lua        lua script file to run")
+		} else if util.ToLower(filepath.Ext(fpath)) == ".lua" {
 			if err := RunLuaVM(util.Envfmt(fpath, nil)); err != nil {
-				log.Println(err.Error())
+				println(err.Error())
 				return
 			}
 		}

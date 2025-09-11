@@ -11,4 +11,7 @@ buildvers=$(git describe --tags)
 buildtime=$(date +'%FT%T.%3NZ')
 
 go env -w GOOS=windows GOARCH=386 CGO_ENABLED=1
-go build -o "$GOPATH/bin/bot_win_x86.exe" -v -ldflags="-X 'main.BuildVers=$buildvers' -X 'main.BuildTime=$buildtime'" $wd
+go build -o "$GOPATH/bin/bot_win_x86.exe" -v\
+ -buildvcs=false\
+ -ldflags="-X 'main.BuildVers=$buildvers' -X 'main.BuildTime=$buildtime'"\
+ $wd
