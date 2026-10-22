@@ -16,38 +16,27 @@ Because the Lua virtual machine can only run in one system thread, `thread` func
 
 ## How to build from sources
 
-1. Install [Golang](https://go.dev/dl/) of last version.
-2. Clone project and download dependencies.
-3. Build project with script at `task` directory.
+* Install [Golang](https://go.dev/dl/) of last version.
 
-For Windows command prompt:
-
-```cmd
-git clone https://github.com/slotopol/bot.git
-cd bot
-go mod download && go mod verify
-task\build-win-x64.cmd
-```
-
-or for Linux shell or git bash:
+* Download the source code and all dependencies:
 
 ```sh
 git clone https://github.com/slotopol/bot.git
 cd bot
-go mod download && go mod verify
-sudo chmod +x ./task/*.sh
-./task/build-linux-x64.sh
+go mod download
 ```
+
+* Next, build the project with some of build-script at `task` directory. If you are working on Windows, run the `task\build-win-x64.cmd` script in the command prompt or `task/build-win-x64.sh` in Git Bash. On Linux, use `./task/build-linux-x64.sh`.
 
 Start [`slotopol server`](https://github.com/slotopol/server), and then bot can be run together with some script:
 
-```cmd
+```sh
 bot_win_x64 script/servinfo.lua
 ```
 
 You can get the list of all provided games by command:
 
-```cmd
+```sh
 bot_win_x64 script/gamelist.lua
 ```
 
@@ -55,13 +44,13 @@ bot_win_x64 script/gamelist.lua
 
 To start single player emulation run followed script:
 
-```cmd
+```sh
 bot_win_x64 script/single.lua
 ```
 
 To start group of players emulation run followed script:
 
-```cmd
+```sh
 bot_win_x64 script/group.lua
 ```
 
@@ -70,4 +59,4 @@ In this script you can change the value of `usrnum` to determine how many player
 During the testing each user starts randomly from 1 to 15 games, and makes a spin each 1.3 seconds (this emulates playing at several browser tabs). If spin have a win, its waits supposed win animation, and randomly starts double-up bonus game. Average every 50 spins user randomly can change bet value or selected bet lines at last spin game. Sometimes he pause randomly 3..15 seconds. If the money runs out, the admin tops up his balance with a random amount.
 
 ---
-(c) schwarzlichtbezirk, 2024-2025.
+(c) schwarzlichtbezirk, 2024-2026.

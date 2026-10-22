@@ -1,0 +1,28 @@
+{
+	"diagnostics.globals": [
+		"channel",
+		"atom",
+		"path",
+
+		"scrdir",
+		"quit",
+		"buildvers",
+		"buildtime",
+		"bindir",
+		"tmpdir",
+
+		"log",
+		"checkfile",
+		"bin2hex",
+		"hex2bin",
+		"milli2time",
+		"time2milli",
+		"sec2dur",
+		"after",
+		"tick",
+		"sleep",
+		"thread",
+
+		"signctx"
+	]
+}

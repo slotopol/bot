@@ -125,7 +125,7 @@ function signin(email, secret)
 end
 
 function refresh(token)
-	return authpost("/refresh", token, nil)
+	return httppost("/token", {refrsh=token})
 end
 
 function gamenew(token, cid, uid, alias)
