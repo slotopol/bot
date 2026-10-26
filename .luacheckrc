@@ -5,7 +5,7 @@
 
 globals = {
 	-- variables
-	"signctx", "admtoken",
+	"signctx", "admauth",
 	"lt", "slotopolhost", "cid", "email", "secret", "name", "jobtime", "speed", "gameset",
 	-- functions
 	"getbitnum", "makebitnum", "shuffle", "kenospots",

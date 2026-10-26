@@ -61,16 +61,15 @@ end
 dofile(scrdir.."/lib/api.lua")
 
 -- login admin to add money to wallet
-local admin = checkbody(signin, "admin@example.org", "0YBoaT")
-local admtoken = admin.access
-printf("signed in admin account with uid=%d, token expires: %s", admin.uid, admin.expire)
+local admauth = checkbody(signin, "admin@example.org", "0YBoaT")
+printf("signed in admin account with uid=%d, token expires: %s", admauth.uid, admauth.expire)
 
 -- generate players
 local n = 0
 for _, user in ipairs(users) do
 	local uid = checkbody(signis, user.email).uid
 	if uid == 0 then
-		uid = checkbody(admsignup, admtoken, user.email, user.secret, user.name).uid
+		uid = checkbody(admsignup, admauth, user.email, user.secret, user.name).uid
 		printf("#%d (%s): registered", uid, user.email)
 		n = n + 1
 	else

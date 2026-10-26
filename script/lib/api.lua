@@ -13,10 +13,10 @@ end
 function getbitnum(v)
 	local b, n = 1, 0
 	repeat
-	  if v % (b*2) > 0 then
+		if v % (b*2) > 0 then
 		v, n = v-b, n+1
-	  end
-	  b = b * 2
+		end
+		b = b * 2
 	until b > v
 	return n
 end
@@ -48,6 +48,21 @@ end
 
 local addr = slotopolhost
 
+---@class auth
+---Structure with authorizarion data.
+---@field uid integer user identifier
+---@field email string user email
+---@field access string access token, used for calls with authorization required
+---@field refrsh string refresh token, used only to get new tokens pair
+---@field expire string time of access token expiration
+---@field period string period until new tokens pair can be get
+---@field expireunix integer unix-time of access token expiration
+---@field periodunix integer unix-time period until new tokens pair can be get
+
+---@param path string URI of the endpoint
+---@param query string? formatted parameters
+---@return table data structure with endpoubt call result
+---@return integer status HTTP status code
 local function httpget(path, query)
 	local res, err = http.get(addr..path, {
 		headers={
@@ -61,6 +76,10 @@ local function httpget(path, query)
 	return json.decode(res.body), res.status_code
 end
 
+---@param path string URI of the endpoint
+---@param body table? structure with the data
+---@return table data structure with endpoubt call result
+---@return integer status HTTP status code
 local function httppost(path, body)
 	local res, err = http.post(addr..path, {
 		headers={
@@ -75,12 +94,24 @@ local function httppost(path, body)
 	return json.decode(res.body), res.status_code
 end
 
-local function authpost(path, token, body)
+---@param path string URI of the endpoint
+---@param auth auth authorization table, should contain user ID, email, `access` and `refresh` tokens, expiration time.
+---@param body table? structure with the data
+---@return table data structure with endpoubt call result
+---@return integer status HTTP status code
+local function authpost(path, auth, body)
+	if os.time() > auth.expireunix-15 then
+		local status
+		auth, status = refresh(auth)
+		if status ~= 200 then
+			error("can not refresh token")
+		end
+	end
 	local res, err = http.post(addr..path, {
 		headers={
 			["Content-Type"]="application/json",
 			["Accept"]="application/json",
-			["Authorization"] = "Bearer "..token,
+			["Authorization"] = "Bearer "..auth.access,
 		},
 		body=json.encode(body)
 	})
@@ -114,120 +145,130 @@ function signup(email, secret, name)
 	return httppost("/signup", {email=email, secret=secret, name=name})
 end
 
-function admsignup(token, email, secret, name)
-	return authpost("/signup", token, {email=email, secret=secret, name=name})
+function admsignup(auth, email, secret, name)
+	return authpost("/signup", auth, {email=email, secret=secret, name=name})
 end
 
 function signin(email, secret)
 	local sigtime = os.date('%Y-%m-%dT%H:%M:%SZ')
 	local hs256 = crypto.hmac("sha256", secret, sigtime)
-	return httppost("/signin", {email=email, hs256=hs256, sigtime=sigtime})
+	local auth, status = httppost("/signin", {email=email, hs256=hs256, sigtime=sigtime})
+	if status == 200 then
+		auth.expireunix = time2milli(auth.expire, "2006-01-02T15:04:05Z07:00")/1000
+		auth.periodunix = time2milli(auth.period, "2006-01-02T15:04:05Z07:00")/1000
+	end
+	return auth, status
 end
 
-function refresh(token)
-	return httppost("/token", {refrsh=token})
+function refresh(oldauth)
+	local auth, status = httppost("/token", {refrsh=oldauth.refrsh})
+	if status == 200 then
+		auth.expireunix = time2milli(auth.expire, "2006-01-02T15:04:05Z07:00")/1000
+		auth.periodunix = time2milli(auth.period, "2006-01-02T15:04:05Z07:00")/1000
+	end
+	return auth, status
 end
 
-function gamenew(token, cid, uid, alias)
-	return authpost("/game/new", token, {cid=cid, uid=uid, alias=alias})
+function gamenew(auth, cid, uid, alias)
+	return authpost("/game/new", auth, {cid=cid, uid=uid, alias=alias})
 end
 
-function gamejoin(token, cid, uid, gid)
-	return authpost("/game/join", token, {cid=cid, uid=uid, gid=gid})
+function gamejoin(auth, cid, uid, gid)
+	return authpost("/game/join", auth, {cid=cid, uid=uid, gid=gid})
 end
 
-function gameinfo(token, gid)
-	return authpost("/game/info", token, {gid=gid})
+function gameinfo(auth, gid)
+	return authpost("/game/info", auth, {gid=gid})
 end
 
-function gamertpget(token, gid)
-	return authpost("/game/rtp/get", token, {gid=gid})
+function gamertpget(auth, gid)
+	return authpost("/game/rtp/get", auth, {gid=gid})
 end
 
-function slotbetget(token, gid)
-	return authpost("/slot/bet/get", token, {gid=gid})
+function slotbetget(auth, gid)
+	return authpost("/slot/bet/get", auth, {gid=gid})
 end
 
-function slotbetset(token, gid, bet)
-	return authpost("/slot/bet/set", token, {gid=gid, bet=bet})
+function slotbetset(auth, gid, bet)
+	return authpost("/slot/bet/set", auth, {gid=gid, bet=bet})
 end
 
-function slotselget(token, gid)
-	return authpost("/slot/sel/get", token, {gid=gid})
+function slotselget(auth, gid)
+	return authpost("/slot/sel/get", auth, {gid=gid})
 end
 
-function slotselset(token, gid, sel)
-	return authpost("/slot/sel/set", token, {gid=gid, sel=sel})
+function slotselset(auth, gid, sel)
+	return authpost("/slot/sel/set", auth, {gid=gid, sel=sel})
 end
 
-function slotspin(token, gid)
+function slotspin(auth, gid)
 	atom.intinc"spin"
-	return authpost("/slot/spin", token, {gid=gid})
+	return authpost("/slot/spin", auth, {gid=gid})
 end
 
-function slotdoubleup(token, gid, mult)
-	return authpost("/slot/doubleup", token, {gid=gid, mult=mult or 2})
+function slotdoubleup(auth, gid, mult)
+	return authpost("/slot/doubleup", auth, {gid=gid, mult=mult or 2})
 end
 
-function slotcollect(token, gid)
-	return authpost("/slot/collect", token, {gid=gid})
+function slotcollect(auth, gid)
+	return authpost("/slot/collect", auth, {gid=gid})
 end
 
-function kenobetget(token, gid)
-	return authpost("/keno/bet/get", token, {gid=gid})
+function kenobetget(auth, gid)
+	return authpost("/keno/bet/get", auth, {gid=gid})
 end
 
-function kenobetset(token, gid, bet)
-	return authpost("/keno/bet/set", token, {gid=gid, bet=bet})
+function kenobetset(auth, gid, bet)
+	return authpost("/keno/bet/set", auth, {gid=gid, bet=bet})
 end
 
-function kenoselget(token, gid)
-	return authpost("/keno/sel/get", token, {gid=gid})
+function kenoselget(auth, gid)
+	return authpost("/keno/sel/get", auth, {gid=gid})
 end
 
-function kenoselset(token, gid, sel)
-	return authpost("/keno/sel/set", token, {gid=gid, sel=sel})
+function kenoselset(auth, gid, sel)
+	return authpost("/keno/sel/set", auth, {gid=gid, sel=sel})
 end
 
-function kenoselgetslice(token, gid)
-	return authpost("/keno/sel/getslice", token, {gid=gid})
+function kenoselgetslice(auth, gid)
+	return authpost("/keno/sel/getslice", auth, {gid=gid})
 end
 
-function kenoselsetslice(token, gid, idx)
-	return authpost("/keno/sel/setslice", token, {gid=gid, sel=idx})
+function kenoselsetslice(auth, gid, idx)
+	return authpost("/keno/sel/setslice", auth, {gid=gid, sel=idx})
 end
 
-function kenospin(token, gid)
+function kenospin(auth, gid)
 	atom.intinc"spin"
-	return authpost("/keno/spin", token, {gid=gid})
+	return authpost("/keno/spin", auth, {gid=gid})
 end
 
-function propget(token, cid, uid)
-	return authpost("/prop/get", token, {cid=cid, uid=uid})
+function propget(auth, cid, uid)
+	return authpost("/prop/get", auth, {cid=cid, uid=uid})
 end
 
-function propwalletget(token, cid, uid)
-	return authpost("/prop/wallet/get", token, {cid=cid, uid=uid})
+function propwalletget(auth, cid, uid)
+	return authpost("/prop/wallet/get", auth, {cid=cid, uid=uid})
 end
 
-function propwalletadd(token, cid, uid, sum)
+function propwalletadd(auth, cid, uid, sum)
 	atom.intinc"topup"
 	atom.numadd("topup", sum)
-	return authpost("/prop/wallet/add", token, {cid=cid, uid=uid, sum=sum})
+	return authpost("/prop/wallet/add", auth, {cid=cid, uid=uid, sum=sum})
 end
 
-function propaccessget(token, cid, uid, all)
-	return authpost("/prop/al/get", token, {cid=cid, uid=uid, all=all or false})
+function propaccessget(auth, cid, uid, all)
+	return authpost("/prop/al/get", auth, {cid=cid, uid=uid, all=all or false})
 end
 
-function propaccessset(token, cid, uid, al)
-	return authpost("/prop/wallet/add", token, {cid=cid, uid=uid, access=al})
+function propaccessset(auth, cid, uid, al)
+	return authpost("/prop/wallet/add", auth, {cid=cid, uid=uid, access=al})
 end
 
-function proprtpget(token, cid, uid, all)
-	return authpost("/prop/al/get", token, {cid=cid, uid=uid, all=all or false})
+function proprtpget(auth, cid, uid, all)
+	return authpost("/prop/al/get", auth, {cid=cid, uid=uid, all=all or false})
 end
 
-function proprtpset(token, cid, uid, mrtp)
-	return authpost("/prop/wallet/add", token, {cid=cid, uid=uid, mrtp=mrtp})
+function proprtpset(auth, cid, uid, mrtp)
+	return authpost("/prop/wallet/add", auth, {cid=cid, uid=uid, mrtp=mrtp})
 end

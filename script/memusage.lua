@@ -16,7 +16,7 @@ if status >= 400 then
 	return
 end
 
-printf("running, seconds: %g", mem.running / 1000)
+printf("running tume: %s", mem.running)
 printf("bytes of allocated heap objects: %d", mem.heapalloc)
 printf("bytes of heap memory obtained from the OS: %d", mem.heapsys)
 printf("total bytes allocated, even if freed: %d", mem.totalalloc)

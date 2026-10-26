@@ -61,13 +61,13 @@ end
 dofile(scrdir.."/lib/api.lua")
 
 -- login admin to add money to wallet
-local admin, status = signin("admin@example.org", "0YBoaT")
+local admauth, status = signin("admin@example.org", "0YBoaT")
 if status >= 400 then
-	printf("can not login admin account, status: %d, code: %d, message: %s", status, admin.code, admin.what)
+	printf("can not login admin account, status: %d, code: %d, message: %s", status, admauth.code, admauth.what)
 	return
 end
-options.admtoken = admin.access
-printf("signed in admin account with uid=%d, token expires: %s", admin.uid, admin.expire)
+options.admauth = admauth
+printf("signed in admin account with uid=%d, token expires: %s", admauth.uid, admauth.expire)
 
 local function tcopy(src)
 	local dst = {}
